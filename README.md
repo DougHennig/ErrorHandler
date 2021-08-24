@@ -8,6 +8,10 @@ See ErrorHandler.docx for documentation.
 
 ## Releases
 
-### 2019-07-20
+### 2021-08-23
+
+* Made it use VFPEncryption71.dll since that support the C++ runtime used by VFP.
+
+### 2021-07-20
 
 * Initial release

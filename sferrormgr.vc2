@@ -1499,12 +1499,12 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Decrypts a string
 		* Author:			Doug Hennig
-		* Last Revision:	03/18/2021
+		* Last Revision:	08/23/2021
 		* Parameters:		tcString - the string to decrypt
 		*					tcKey    - a key to decrypt against
 		* Returns:			the decrypted string
 		* Environment in:	oUtility is an object or VFPEncryption is available
-		* Environment out:	VFPEncryption may have been loaded
+		* Environment out:	VFPEncryption71 may have been loaded
 		*==============================================================================
 		
 		lparameters tcString, ;
@@ -1514,7 +1514,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		if type('oUtility.Name') = 'C'
 			lcReturn = oUtility.Decrypt(tcString, tcKey)
 		else
-			lcLibrary = 'VFPEncryption'
+			lcLibrary = 'VFPEncryption71'
 			set library to (lcLibrary)  additive
 			lcReturn = strtran(Decrypt(tcString, tcKey), ccNULL)
 		endif type('oUtility.Name') = 'C'
