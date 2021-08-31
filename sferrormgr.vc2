@@ -138,10 +138,12 @@ DEFINE CLASS sferrormessage AS form
 	PROCEDURE Show
 		lparameters tnStyle
 		with This
-			.cmdCancel.Enabled  = .oErrorMgr.lCanCancel
-			.cmdDebug.Enabled   = .oErrorMgr.lShowDebug
-			.Caption            = .oErrorMgr.cTitle
-			.edtMessage.Caption = left(strtran(.oErrorMgr.cMessage, ccTAB, space(4)), ;
+			.cmdCancel.Enabled   = .oErrorMgr.lCanCancel
+			.cmdDebug.Enabled    = .oErrorMgr.lShowDebug
+			.cmdContinue.Enabled = .oErrorMgr.lCanContinue
+			.cmdRetry.Enabled    = .oErrorMgr.lCanContinue
+			.Caption             = .oErrorMgr.cTitle
+			.edtMessage.Caption  = left(strtran(.oErrorMgr.cMessage, ccTAB, space(4)), ;
 				254)
 		endwith
 		dodefault(tnStyle)
@@ -261,7 +263,7 @@ DEFINE CLASS sferrormessagedialog AS form 		&& A modal dialog to display error m
 	ControlBox = .F.
 	Desktop = .T.
 	DoCreate = .T.
-	Height = 540
+	Height = 533
 	lsent = .F.		&& .T. if a ticket was created or email sent
 	MaxButton = .F.
 	MinButton = .F.
@@ -695,23 +697,15 @@ DEFINE CLASS sferrormessagedialog AS form 		&& A modal dialog to display error m
 
 	PROCEDURE cmdEmail.Refresh
 		* This button is only enabled if we have a mail server to use, we're using
-		* MAPI, or we have code for CreateTicket, and we haven't already sent the error
-		* report.
+		* MAPI, or we have code for CreateTicket.
 		
-		local loError, ;
-			llHaveSender, ;
-			llTicket, ;
-			llEmail
-		loError      = Thisform.oErrorMgr
-		llHaveSender = not empty(Thisform.txtSenderName.Value) and ;
-			not empty(Thisform.txtSenderEmail.Value)
-		llTicket     = lower(loError.Class) <> 'sferrormgr' and ;
-			pemstatus(loError, 'CreateTicket', 0)
-			&& we have code for the CreateTicket method in a subclass of SFErrorMgr
-		llEmail      = (not empty(loError.cMailServer) or loError.lMAPI) and ;
-			not empty(loError.cRecipient)
-		This.Enabled = (llTicket or (llEmail and llHaveSender)) and not Thisform.lSent
-		 
+		local loError
+		loError = Thisform.oErrorMgr
+		This.Enabled = (not empty(loError.cMailServer) or loError.lMAPI or ;
+			pemstatus(loError, 'CreateTicket', 0)) and ;
+			not empty(Thisform.txtSenderName.Value) and ;
+			not empty(Thisform.txtSenderEmail.Value) and not Thisform.lSent
+		
 	ENDPROC
 
 	PROCEDURE cmdHelp.Click
@@ -724,10 +718,6 @@ DEFINE CLASS sferrormessagedialog AS form 		&& A modal dialog to display error m
 	ENDPROC
 
 	PROCEDURE cmdHelp.Init
-		local lcHelp
-		lcHelp = set('HELP', 1)
-		This.Visible = set('HELP') = 'ON' and not empty(lcHelp) and ;
-			not 'foxhelp' $ lower(lcHelp)
 		if type('oLocalizer.Name') = 'C'
 			This.Caption = oLocalizer.GetLocalizedString('UI_CMD_HELP_LOC')
 		endif type('oLocalizer.Name') = 'C'
@@ -885,7 +875,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*m: revertalltables		&& Reverts all cursors in all datasessions
 		*m: reverttables		&& Revert cursors in the current datasession
 		*m: screenshot		&& Takes a screen shot
-		*m: sendemail		&& Sends an email to support staff
 		*m: setdialogproperties		&& Sets properties of the error dialog before displaying it
 		*m: seterror		&& Sets lErrorOccurred and aErrorInfo to information about the most recent error
 		*m: setsuppresserrors		&& An exposed method to set the value of the protected lSuppressErrors.
@@ -920,6 +909,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*p: cversion		&& The application version number
 		*p: lautocreateticket		&& .T. to automatically create a ticket
 		*p: lcancancel		&& .T. if the user can "cancel" (that is, stay in the application)
+		*p: lcancontinue		&& .T. if the user can "continue" (that is, RETRY or RETURN)
 		*p: ldisplayerrors		&& .T. if we're supposed to display errors and get the user's choice
 		*p: ldisplayingerrordialog		&& .T. if we're displaying the error dialog
 		*p: lemaillogging		&& .T. to do email logging
@@ -951,7 +941,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*p: _memberdata		&& XML Metadata for customizable properties
 	*</DefinedPropArrayMethod>
 
-	PROTECTED ccurrerror,cimagefile,lerrorinfosaved,lerroroccurred,lsetonerror,lsuppresserrors,lticketcreated,tthrottletime
+	PROTECTED ccurrerror,lerrorinfosaved,lerroroccurred,lsuppresserrors
 	calias = 		&& The selected alias
 	cappname = 		&& The name of the application
 	cattachments = 		&& Attachments for the email or support ticket
@@ -973,7 +963,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 	cpassword = 		&& The email password
 	crecipient = 		&& The recipient of the email
 	creturntooncancel = MASTER		&& The name of the program to return to when Cancel is chosen
-	creturntoonquit = 		&& The name of the program to return to when Quit is chosen
+	creturntoonquit = MASTER		&& The name of the program to return to when Quit is chosen
 	csenderemail = 		&& The sender's email address
 	csendername = 		&& The name of the sender
 	csubject = 		&& The subject of the error message
@@ -983,6 +973,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 	cversion = 		&& The application version number
 	lautocreateticket = .F.		&& .T. to automatically create a ticket
 	lcancancel = .F.		&& .T. if the user can "cancel" (that is, stay in the application)
+	lcancontinue = .T.		&& .T. if the user can "continue" (that is, RETRY or RETURN)
 	ldisplayerrors = .T.		&& .T. if we're supposed to display errors and get the user's choice
 	ldisplayingerrordialog = .F.		&& .T. if we're displaying the error dialog
 	lemaillogging = .F.		&& .T. to do email logging
@@ -1046,6 +1037,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		<memberdata name="immediateexit" type="method" display="ImmediateExit"/>
 		<memberdata name="isreturntooncallstack" type="method" display="IsReturnToOnCallStack"/>
 		<memberdata name="lcancancel" type="property" display="lCanCancel"/>
+		<memberdata name="lcancontinue" type="property" display="lCanContinue"/>
 		<memberdata name="ldisplayerrors" type="property" display="lDisplayErrors"/>
 		<memberdata name="ldisplayingerrordialog" type="property" display="lDisplayingErrorDialog"/>
 		<memberdata name="lemaillogging" type="property" display="lEmailLogging"/>
@@ -1073,6 +1065,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		<memberdata name="setsuppresserrors" type="method" display="SetSuppressErrors"/>
 		<memberdata name="lerroroccurred" display="lErrorOccurred"/>
 		<memberdata name="about" display="About"/>
+		<memberdata name="cerrorlogtextfile" display="cErrorLogTextFile"/>
 		<memberdata name="cmailclass" display="cMailClass"/>
 		<memberdata name="cmaillibrary" display="cMailLibrary"/>
 		<memberdata name="lautocreateticket" display="lAutoCreateTicket"/>
@@ -1093,8 +1086,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		<memberdata name="lticketcreated" display="lTicketCreated"/>
 		<memberdata name="nreturncode" display="nReturnCode"/>
 		<memberdata name="calias" display="cAlias"/>
-		<memberdata name="sendemail" display="SendEmail"/>
-		<memberdata name="cerrorlogtextfile" display="cErrorLogTextFile"/>
 		<memberdata name="lhandlingerror" display="lHandlingError"/>
 		</VFPData>		&& XML Metadata for customizable properties
 	
@@ -1104,7 +1095,8 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Based On:						Custom
 		* Purpose:						Error handler class
 		* Author:						Doug Hennig
-		* Last revision:				07/14/2021
+		* Copyright:					(c) 1996-2021 Stonefield Software Inc.
+		* Last revision:				08/31/2021
 		* Include file:					SFErrorMgr.h
 		*
 		* Changes in "Based On" class properties:
@@ -1121,16 +1113,16 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*	aErrorInfo:					an array containing error information; see the
 		*								SetError method documentation for the structure
 		*								of this array
-		*	cAlias:						the selected alias
 		*	cAppName:					the name of the application
-		*	cAttachments:				attachments for the email or support ticket (in
-		*								addition to attachments SFErrorLog creates)
+		*	cAttachments:				attachments for the email or support ticket
 		*	cContact:					the user's display name
 		*	cDefaultAction:				the default action to take
 		*	cEmail:						the user's email address
 		*	cEmailLogFolder:			the folder to use for email logging
 		*	cErrorLogFile:				the name of the table to log errors to
 		*	cErrorLogTextFile:			the name of the text file to log errors to
+		*	cImageFile:					the name and path of the image file for the
+		*								screen shot
 		*	cMailClass:					the class to use for emailing
 		*	cMailErrorMessage:			the message of any error from the mail object
 		*	cMailLibrary:				the library containing the class specified in
@@ -1146,16 +1138,18 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*								Cancel is chosen
 		*	cReturnToOnQuit:			the name of the program to return to when
 		*								Quit is chosen
-		*	cSenderEmail:				the sender's email address (internal use)
-		*	cSenderName:				the name of the sender (internal use)
-		*	cSubject:					the subject of the email
+		*	cSenderEmail:				the sender's email address
+		*	cSenderName:				the name of the sender
+		*	cSubject:					the subject of the error message
 		*	cTitle:						the default title for the error message dialog
 		*	cUser:						the name of the user
 		*	cUserName:					the email user name
 		*	cVersion:					the application version number
 		*	lAutoCreateTicket:			.T. to automatically create a ticket
 		*	lCanCancel:					.T. if the user can "cancel" (that is, stay in
-		*								the application; internal use)
+		*								the application)
+		*	lCanContinue:				.T. if the user can "continue" (that is, RETRY
+		*								or RETURN)
 		*	lDisplayErrors:				.T. if we're supposed to display errors and get
 		*								the user's choice
 		*	lDisplayingErrorDialog:		.T. if we're displaying the error dialog
@@ -1169,14 +1163,16 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*	lHandlingError:				.T. if we're in the process of handling an
 		*								error
 		*	lInsideTry:					.T. if code was executing inside a TRY
-		*								structure when the error occurred (for backward
-		*								compatibility with an earlier version)
+		*								structure when the error occurred
 		*	lLogToTable:				.T. if the error should be logged to a table
-		*	lMAPI:						.T. to use MAPI for the email
+		*	lMAPI:						.T. to use MAPI
 		*	lQuit:						.T. if we're quitting (public so other objects
 		*								can check on the way out)
 		*	lScreenShot:				.T. to take a screen shot
+		*	lSetOnError:				.T. to set ON ERROR to point to the
+		*								ErrorHandler method
 		*	lShowDebug:					.T. if "debug" should be an option
+		*	lTicketCreated				.T. if a ticket was created
 		*	lUserCanSaveDialog:			.T. if the user can save the error log
 		*	nLastError:					the index to the last error that occurred in
 		*								aErrorInfo
@@ -1193,19 +1189,14 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*								to be enabled
 		*	nThrottleWindow:			how long to wait when error throttling before
 		*								errors suppression is disabled
+		*	tThrottleTime:				when error suppression started
 		*
 		* Custom protected properties added:
 		*	cCurrError:					the former ON ERROR handler
-		*	cImageFile:					the name and path of the image file for the
-		*								screen shot
 		*	lErrorInfoSaved:			.T. if the error information has been saved in
 		*								aErrorInfo
 		*	lErrorOccurred:				.T. if an error occurred
-		*	lSetOnError:				.T. to set ON ERROR to point to the
-		*								ErrorHandler method
 		*	lSuppressErrors:			if .T., an error isn't logged or displayed
-		*	lTicketCreated:				.T. if a ticket was created
-		*	tThrottleTime:				when error suppression started
 		*
 		* Custom public methods added:
 		*	CheckInTry:					checks to see if we're in a TRY structure
@@ -1240,7 +1231,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*	CreateErrorMessage:			creates a string describing the error
 		*	IsReturnToOnCallStack:		determines if the specified routine is on the
 		*								call stack
-		*	SendEmail:					sends an email to support staff
 		*==============================================================================
 		
 	ENDPROC
@@ -1252,6 +1242,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Purpose:			Checks to see if we're in a TRY structure somewhere in the
 		*						call stack
 		* Author:			Doug Hennig
+		* Copyright:		(c) 2019-2021 Stonefield Software Inc.
 		* Last Revision:	03/09/2021
 		* Parameters:		none
 		* Returns:			.T. if we're in a TRY structure somewhere in the call stack
@@ -1287,6 +1278,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Method:			CommandShell
 		* Purpose:			Command shell for runtime environments
 		* Author:			Doug Hennig
+		* Copyright:		(c) 1997-2005 Stonefield Software Inc.
 		* Last Revision:	01/12/2005
 		* Parameters:		none
 		* Environment in:	none
@@ -1307,7 +1299,8 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Protected
 		* Purpose:			Create a string describing the error
 		* Author:			Doug Hennig
-		* Last revision:	06/17/2021
+		* Copyright:		(c) 1996-2021 Stonefield Software Inc.
+		* Last revision:	03/12/2021
 		* Parameters:		none
 		* Returns:			a string describing the error
 		* Environment in:	This.aErrorInfo is filled with error information
@@ -1340,7 +1333,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 			lcLine5, ;
 			lcLine6, ;
 			lcLine7, ;
-			lcLine8, ;
 			lcMessage
 		with This
 		
@@ -1391,13 +1383,11 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 			lcLine6   = trim(ccMSG_OBJECT) + ' ' + lcObject
 			lcLine7   = iif(empty(lcModule), '', trim(ccMSG_MODULE) + ' ' + ;
 				lcModule)
-			lcLine8   = trim(ccMSG_APPLICATION) + ' ' + .cAppName + ' ' + .cVersion
 			lcMessage = lcLine1 + ccCRLF + lcLine2 + ccCRLF + ;
 				iif(empty(lcLine3), '', lcLine3 + ccCRLF) + ;
 				iif(empty(lcLine4), '', lcLine4 + ccCRLF) + ;
 				iif(empty(lcLine5), '', lcLine5 + ccCRLF) + lcLine6 + ;
-				ccCRLF + iif(empty(lcLine7), '', lcLine7 + ccCRLF) + ;
-				iif(empty(lcLine8), '', lcLine8 + ccCRLF)
+				ccCRLF + iif(empty(lcLine7), '', lcLine7 + ccCRLF)
 		endwith
 		return lcMessage
 		
@@ -1409,6 +1399,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Creates a mail object
 		* Author:			Doug Hennig
+		* Copyright:		(c) 2021 Stonefield Software Inc.
 		* Last Revision:	03/22/2021
 		* Parameters:		none
 		* Returns:			a mail object
@@ -1429,6 +1420,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Creates a support ticket
 		* Author:			Doug Hennig
+		* Copyright:		(c) 2021 Stonefield Software Inc.
 		* Last Revision:	03/19/2021
 		* Parameters:		tcMessage     - the message
 		*					tcEmail       - the email address of the user
@@ -1455,7 +1447,8 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Creates a ticket or sends an email
 		* Author:			Doug Hennig
-		* Last Revision:	06/21/2021
+		* Copyright:		(c) 2021 Stonefield Software Inc.
+		* Last Revision:	03/30/2021
 		* Parameters:		tcMessage - the message for the ticket or email
 		*					tcEmail   - the email address to use
 		*					tcContact - the name of the user
@@ -1471,7 +1464,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 			lcContact, ;
 			lcAttachments, ;
 			llOK, ;
-			lcPassword
+			loMail
 		with This
 			lcEmail         = evl(tcEmail,   .cSenderEmail)
 			lcContact       = evl(tcContact, .cSenderName)
@@ -1482,11 +1475,34 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 			llOK            = .CreateTicket(tcMessage, lcEmail, lcContact, lcAttachments)
 			.lTicketCreated = llOK
 			if not llOK and not empty(.cRecipient)
-				lcPassword = .cPassword
-				if not empty(lcPassword)
-					lcPassword = .Decrypt(.cPassword, .cUserName)
-				endif not empty(lcPassword)
-				llOK = .SendEmail(tcMessage, lcEmail, lcContact, lcAttachments, lcPassword)
+				loMail = .CreateMailObject()
+				loMail.cRecipients  = .cRecipient
+				loMail.cSubject     = .cSubject
+				loMail.cBody        = tcMessage
+				loMail.cAttachments = lcAttachments
+				if not .lMAPI
+					loMail.lUseMAPI         = .F.
+					loMail.cServer          = .cMailServer
+					loMail.cSenderEmail     = evl(.cSenderEmail, lcEmail)
+						&& some servers require the sender email to match an
+						&& authenticated name; cReplyTo allows us to possibly have a
+						&& different Reply-To address than the sender
+					loMail.cReplyTo         = lcEmail
+					loMail.cSenderName      = lcContact
+					loMail.cLogFile         = iif(empty(.cEmailLogFolder), '', ;
+						.cEmailLogFolder + 'EmailLog.txt')
+					loMail.nSMTPPort        = .nSMTPPort
+					loMail.nSecurityOptions = .nSecurityOptions
+					loMail.cUser            = .cUserName
+					loMail.cPassword        = .cPassword
+					if not empty(loMail.cPassword)
+						loMail.cPassword = .Decrypt(.cPassword, .cUserName)
+					endif not empty(loMail.cPassword)
+				endif not .lMAPI
+				llOK = loMail.SendMail()
+				if not llOK
+					.cMailErrorMessage = loMail.cErrorMessage
+				endif not llOK
 			endif not llOK ...
 		endwith
 		return llOK
@@ -1499,12 +1515,13 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Decrypts a string
 		* Author:			Doug Hennig
-		* Last Revision:	08/23/2021
+		* Copyright:		(c) 2021 Stonefield Software Inc.
+		* Last Revision:	08/24/2021
 		* Parameters:		tcString - the string to decrypt
 		*					tcKey    - a key to decrypt against
 		* Returns:			the decrypted string
-		* Environment in:	oUtility is an object or VFPEncryption is available
-		* Environment out:	VFPEncryption71 may have been loaded
+		* Environment in:	oUtility is an object or VFPEncryption is loaded
+		* Environment out:	none
 		*==============================================================================
 		
 		lparameters tcString, ;
@@ -1514,8 +1531,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		if type('oUtility.Name') = 'C'
 			lcReturn = oUtility.Decrypt(tcString, tcKey)
 		else
-			lcLibrary = 'VFPEncryption71'
-			set library to (lcLibrary)  additive
 			lcReturn = strtran(Decrypt(tcString, tcKey), ccNULL)
 		endif type('oUtility.Name') = 'C'
 		return lcReturn
@@ -1529,6 +1544,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Purpose:			Resets the former ON ERROR handler as the object is
 		*						destroyed
 		* Author:			Doug Hennig
+		* Copyright:		(c) 1996 Stonefield Software Inc.
 		* Last revision:	12/23/96
 		* Parameters:		None
 		* Returns:			.T.
@@ -1556,6 +1572,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*						return the value of the protected property
 		*						This.lErrorOccurred
 		* Author:			Doug Hennig
+		* Copyright:		(c) 1996 Stonefield Software Inc.
 		* Last revision:	08/23/96
 		* Parameters:		None
 		* Returns:			.T. if an error occured
@@ -1574,6 +1591,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Purpose:			Display an error dialog and allow the user to decide what
 		*						to do about it
 		* Author:			Doug Hennig
+		* Copyright:		(c) 1996-2021 Stonefield Software Inc.
 		* Last revision:	03/29/2021
 		* Parameters:		none
 		* Returns:			the user's choice (as the caption of the button selected)
@@ -1636,6 +1654,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Handle errors
 		* Author:			Doug Hennig
+		* Copyright:		(c) 1996-2021 Stonefield Software Inc.
 		* Last revision:	07/14/2021
 		* Parameters:		tnError  - the error number
 		*					tcMethod - the method or function the error occurred in
@@ -1966,8 +1985,11 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 			lnMember, ;
 			lcObject, ;
 			llBlank, ;
-			loLocator, ;
-			loWMI, ;
+			lnCurrSession, ;
+			laSessions[1], ;
+			lnSessions, ;
+			lnSession, ;
+			lcStatus, ;
 			loVrbls, ;
 			loVrbl
 		lcFile      = addbs(sys(2023)) + sys(2015) + '.TXT'
@@ -2168,26 +2190,47 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		catch
 		endtry
 		
-		* Now handle status.
+		* Now handle the status in the active datasession.
 		
+		lnCurrSession = set('DATASESSION')
 		list status noconsole to file (lcFile)
-		lcVars = lcVars + filetostr(lcFile) + ccCRLF
+		lcVars = lcVars + 'Active Datasession: ' + transform(lnCurrSession) + ;
+			ccCRLF + filetostr(lcFile) + ccCRLF
 		erase (lcFile)
 		
-		* Now get environment variables. This was adapted from code written by Sergey
-		* Berezniker: http://www.berezniker.com/content/pages/visual-foxpro/enumerating-environment-variables
+		* Now handle the status in other datasessions.
 		
-		lcVars = lcVars + ccCRLF + ccCRLF + 'Environment variables:' + ccCRLF
-		try
-			loLocator = createobject('WbemScripting.SWbemLocator')
-			loWMI     = loLocator.ConnectServer()
-			loVrbls  = loWMI.ExecQuery('select * from Win32_Environment')
-			for each loVrbl in loVrbls
-				lcVars = lcVars + loVrbl.Name + ' (' + loVrbl.UserName + '): ' + ;
-					loVrbl.VariableValue + ccCRLF
-			next loVrbl
-		catch
-		endtry
+		lnSessions = asessions(laSessions)
+		for lnI = 1 to lnSessions
+			lnSession = laSessions[lnI]
+			if lnSession <> lnCurrSession
+				set datasession to lnSession
+				list status noconsole to file (lcFile)
+				lcStatus = filetostr(lcFile)
+				lnPos    = at('Currently Selected', lcStatus)
+				lcStatus = substr(lcStatus, lnPos)
+				lnPos    = at('Procedure file', lcStatus)
+				lcStatus = left(lcStatus, lnPos - 1)
+				lcVars   = lcVars + 'Datasession: ' + transform(lnSession) + ccCRLF + ;
+					lcStatus + ccCRLF
+				erase (lcFile)
+			endif lnSession <> lnCurrSession
+		next lnI
+		set datasession to lnCurrSession
+		
+		* Now get environment variables.
+		
+		if type('oUtility.Name') = 'C'
+			lcVars = lcVars + ccCRLF + ccCRLF + 'Environment variables:' + ccCRLF
+			try
+				loVrbls = oUtility.GetEnvironmentVariables()
+				for each loVrbl in loVrbls
+					lcVars = lcVars + loVrbl.Name + ' (' + loVrbl.UserName + '): ' + ;
+						loVrbl.VariableValue + ccCRLF
+				next loVrbl
+			catch
+			endtry
+		endif type('oUtility.Name') = 'C'
 		
 		* Clean up and exit.
 		
@@ -2235,29 +2278,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 			_screen.Visible      = .T.
 			clear events
 		
-		* Query all forms to ensure it's safe to do so.
-		
-			try
-				for lnI = 1 to _screen.FormCount
-					loForm = _screen.Forms[lnI]
-					if pemstatus(loForm, 'QueryUnload', 5)
-						llOK = loForm.QueryUnload()
-						if llOK
-							loForm.Release()
-						else					
-							if type('oLogger.Name') = 'C'
-								oLogger.LogElapsedMilestone('SFErrorMgr.ImmediateExit: ' + ;
-									_screen.Forms[lnI].Name + '.QueryUnload failed')
-							endif type('oLogger.Name') = 'C'
-							exit
-						endif llOK
-					else
-						loForm.Release()
-					endif pemstatus(loForm, 'QueryUnload', 5)
-				next lnI
-			catch
-			endtry
-		
 		* Terminate the program.
 		
 			cancel
@@ -2271,7 +2291,8 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Initialize this class
 		* Author:			Doug Hennig
-		* Last revision:	06/17/2021
+		* Copyright:		(c) 1996-2021 Stonefield Software Inc.
+		* Last revision:	08/24/2021
 		* Parameters:		tcTitle       - the default title to use for the error
 		*						dialog
 		*					tlSetOnError  - .T. to set ON ERROR
@@ -2295,8 +2316,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*						SFERRORMGR.H for the value of this constant)
 		*					This.lDisplayErrors is set to .F. if we're running in a COM
 		*						server
-		*					This.cReturnToOnQuit is blanked if we're called from the
-		*						main program for an application or set to MASTER if not
+		*					VFPEncryption71.fll was opened
 		*==============================================================================
 		
 		* Set our message box title if one is passed. Set our lSetOnError property if
@@ -2332,28 +2352,16 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 			.aErrorInfo = ''
 			.cDefaultAction = ccMSG_CONTINUE
 		
-		* If we're being called from the main program for an application, blank
-		* cReturnToOnQuit because if it's set to MASTER, an error occurring in the main
-		* program will cause execution to continue in that program even if the user
-		* chooses Quit. In that case, the developer has to set .cReturnToOnQuit to
-		* MASTER just before the READ EVENTS statement.
-		
-			if program(-1) = 2
-				.cReturnToOnQuit = ''
-			else
-		
-		* If we're not being called from the main program, we can set cReturnToOnQuit
-		* to MASTER so any error that occurs in the calling program will return to
-		* the main program if the user chooses Quit.
-		
-				.cReturnToOnQuit = 'MASTER'
-			endif program(-1) > 2
-		
 		* If we're running in a COM server, disable displaying errors.
 		
 			if inlist(_vfp.StartMode, 2, 3, 5)
 				.lDisplayErrors = .F.
 			endif inlist(_vfp.StartMode, 2, 3, 5)
+		
+		* Open the VFPEncryption71 library.
+		
+			lcLibrary = 'VFPEncryption71.fll'
+			set library to (lcLibrary) additive
 		endwith
 		
 	ENDPROC
@@ -2364,7 +2372,8 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Protected
 		* Purpose:			Determines if the specified routine is on the call stack
 		* Author:			Doug Hennig
-		* Last revision:	06/17/2021
+		* Copyright:		(c) 1996-2021 Stonefield Software Inc.
+		* Last revision:	03/15/2021
 		* Parameters:		tcReturnTo - the method to return to
 		* Returns:			.T. if the specified routine is on the call stack
 		* Environment in:	none
@@ -2378,12 +2387,9 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 			lnStack, ;
 			lnI, ;
 			lcProgram
-		do case
-			case empty(tcReturnTo)
-				return .F.
-			case upper(tcReturnTo) == 'MASTER'
-				return .T.
-		endcase
+		if upper(tcReturnTo) == 'MASTER'
+			return .T.
+		endif upper(tcReturnTo) == 'MASTER'
 		lcReturn       = upper(tcReturnTo)
 		lcReturnMethod = '.' + lcReturn
 		lnStack        = program(-1)
@@ -2404,7 +2410,8 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Protected
 		* Purpose:			Log the error to a log file
 		* Author:			Doug Hennig
-		* Last revision:	07/14/2021
+		* Copyright:		(c) 1996-2021 Stonefield Software Inc.
+		* Last revision:	07/13/2021
 		* Parameters:		None
 		* Returns:			.T.
 		* Environment in:	This.cErrorLogFile contains the name of the error log table
@@ -2419,8 +2426,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*						text file
 		*==============================================================================
 		
-		local lcSafety, ;
-			luErrWorkArea, ;
+		local luErrWorkArea, ;
 			lcErrSource, ;
 			lnErrNumber, ;
 			luErrTrigger, ;
@@ -2622,10 +2628,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 				fwrite(lnHandle, ccMSG_DATETIME + ttoc(ltErrTime) + ccCRLF)
 				fwrite(lnHandle, ccMSG_USER + lcErrUser + ccCRLF)
 				fwrite(lnHandle, ccMSG_MACHINE + lcErrMachine + ccCRLF)
-				if not empty(.cAppName)
-					fwrite(lnHandle, ccMSG_APPLICATION + .cAppName + ' ' + ;
-						.cVersion + ccCRLF)
-				endif not empty(.cAppName)
 				fwrite(lnHandle, ccCRLF)
 				fwrite(lnHandle, lcVars)
 				fclose(lnHandle)
@@ -2648,6 +2650,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Purpose:			Resets the error flag and array (an exposed method to
 		*						handle these protected properties)
 		* Author:			Doug Hennig
+		* Copyright:		(c) 1996-2021 Stonefield Software Inc.
 		* Last revision:	03/18/2021
 		* Parameters:		None
 		* Returns:			.T.
@@ -2671,6 +2674,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Protected
 		* Purpose:			Revert all cursors in all datasessions
 		* Author:			Doug Hennig
+		* Copyright:		(c) 1996-2005 Stonefield Software Inc.
 		* Last revision:	08/24/2005
 		* Parameters:		none
 		* Returns:			.T.
@@ -2696,6 +2700,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Protected
 		* Purpose:			Revert cursors in the current datasession
 		* Author:			Doug Hennig
+		* Copyright:		(c) 1997-2005 Stonefield Software Inc.
 		* Last Revision:	09/15/2005
 		* Parameters:		none
 		* Returns:			.T.
@@ -2739,6 +2744,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Takes a screen shot
 		* Author:			Doug Hennig
+		* Copyright:		(c) 2021 Stonefield Software Inc.
 		* Last Revision:	03/10/2021
 		* Parameters:		none
 		* Returns:			.T.
@@ -2760,66 +2766,13 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		
 	ENDPROC
 
-	PROTECTED PROCEDURE sendemail		&& Sends an email to support staff
-		*==============================================================================
-		* Method:			SendEmail
-		* Status:			Protected
-		* Purpose:			Sends an email to support staff
-		* Author:			Doug Hennig
-		* Last Revision:	06/21/2021
-		* Parameters:		tcMessage     - the message for the email
-		*					tcEmail       - the email address to use
-		*					tcContact     - the name of the user
-		*					tcAttachments - a comma-separated list of attachments
-		*					tcPassword    - the decrypted password
-		* Returns:			.T. if the email was sent
-		* Environment in:	the various email-related properties, such as cRecipient,
-		*						are filled in
-		* Environment out:	cMailErrorMessage may contain the text of an error
-		*==============================================================================
-		
-		lparameters tcMessage, ;
-			tcEmail, ;
-			tcContact, ;
-			tcAttachments, ;
-			tcPassword
-		with This
-			loMail = .CreateMailObject()
-			loMail.cRecipients  = .cRecipient
-			loMail.cSubject     = .cSubject
-			loMail.cBody        = tcMessage
-			loMail.cAttachments = tcAttachments
-			if not .lMAPI
-				loMail.lUseMAPI         = .F.
-				loMail.cServer          = .cMailServer
-				loMail.cSenderEmail     = evl(.cSenderEmail, tcEmail)
-					&& some servers require the sender email to match an
-					&& authenticated name; cReplyTo allows us to possibly have a
-					&& different Reply-To address than the sender
-				loMail.cReplyTo         = tcEmail
-				loMail.cSenderName      = tcContact
-				loMail.cLogFile         = iif(empty(.cEmailLogFolder), '', ;
-					.cEmailLogFolder + 'EmailLog.txt')
-				loMail.nSMTPPort        = .nSMTPPort
-				loMail.nSecurityOptions = .nSecurityOptions
-				loMail.cUser            = .cUserName
-				loMail.cPassword        = tcPassword
-			endif not .lMAPI
-			llOK = loMail.SendMail()
-			if not llOK
-				.cMailErrorMessage = loMail.cErrorMessage
-			endif not llOK
-		endwith
-		return llOK
-		
-	ENDPROC
-
 	PROCEDURE setdialogproperties		&& Sets properties of the error dialog before displaying it
 		*==============================================================================
 		* Function:			SetDialogProperties
 		* Status:			Public
 		* Purpose:			Sets properties of the error dialog before displaying it
 		* Author:			Doug Hennig
+		* Copyright:		(c) 1996-2021 Stonefield Software Inc.
 		* Last revision:	03/12/2021
 		* Parameters:		toDialog - a reference to the dialog
 		* Returns:			none
@@ -2840,6 +2793,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Purpose:			Sets lErrorOccurred and aErrorInfo to information about
 		*						the most recent error
 		* Author:			Doug Hennig
+		* Copyright:		(c) 1996-2021 Stonefield Software Inc.
 		* Last revision:	03/19/2021
 		* Parameters:		tcMethod - the method or function the error occurred in
 		*					tnLine   - the line number within tcMethod
@@ -2973,6 +2927,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Purpose:			Sets This.lSuppressErrors and returns its former value (an
 		*						exposed method to handle this protected property)
 		* Author:			Doug Hennig
+		* Copyright:		(c) 1996-2003 Stonefield Software Inc.
 		* Last revision:	09/30/2003
 		* Parameters:		tlSuppress - .T. to suppress errors or .F. to show them
 		* Returns:			the former value of This.lSuppressErrors

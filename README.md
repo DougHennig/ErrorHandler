@@ -8,6 +8,10 @@ See ErrorHandler.docx for documentation.
 
 ## Releases
 
+### 2021-08-31
+
+* It now lists in the log the cursors open in each datasession.
+
 ### 2021-08-23
 
 * Made it use VFPEncryption71.dll since that support the C++ runtime used by VFP.
