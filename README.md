@@ -8,6 +8,10 @@ See ErrorHandler.docx for documentation.
 
 ## Releases
 
+### 2021-09-21
+
+* You can now specify the name of the encryption library to use by changing the new cEncryptionLibrary property (set to "VFPEncryption71.dll" by default) if necessary.
+
 ### 2021-08-31
 
 * It now lists in the log the cursors open in each datasession.

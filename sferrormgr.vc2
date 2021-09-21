@@ -886,6 +886,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*p: cdefaultaction		&& The default action to take
 		*p: cemail		&& The user's email address
 		*p: cemaillogfolder		&& The folder to use for email logging
+		*p: cencryptionlibrary		&& The name of the encryption library to use
 		*p: cerrorlogfile		&& The name of the table to log errors to
 		*p: cerrorlogtextfile		&& The name of the text file to log errors to
 		*p: cimagefile		&& The name and path of the image file for the screen shot
@@ -950,6 +951,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 	cdefaultaction = 		&& The default action to take
 	cemail = 		&& The user's email address
 	cemaillogfolder = 		&& The folder to use for email logging
+	cencryptionlibrary = VFPEncryption71.fll		&& The name of the encryption library to use
 	cerrorlogfile = errorlog.dbf		&& The name of the table to log errors to
 	cerrorlogtextfile = 		&& The name of the text file to log errors to
 	cimagefile = 		&& The name and path of the image file for the screen shot
@@ -1087,6 +1089,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		<memberdata name="nreturncode" display="nReturnCode"/>
 		<memberdata name="calias" display="cAlias"/>
 		<memberdata name="lhandlingerror" display="lHandlingError"/>
+		<memberdata name="cencryptionlibrary" display="cEncryptionLibrary"/>
 		</VFPData>		&& XML Metadata for customizable properties
 	
 	PROCEDURE about		&& Provides documentation for the class
@@ -1096,7 +1099,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Purpose:						Error handler class
 		* Author:						Doug Hennig
 		* Copyright:					(c) 1996-2021 Stonefield Software Inc.
-		* Last revision:				08/31/2021
+		* Last revision:				08/21/2021
 		* Include file:					SFErrorMgr.h
 		*
 		* Changes in "Based On" class properties:
@@ -1119,6 +1122,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*	cDefaultAction:				the default action to take
 		*	cEmail:						the user's email address
 		*	cEmailLogFolder:			the folder to use for email logging
+		*	cEncryptionLibrary:			the name of the encryption library to use
 		*	cErrorLogFile:				the name of the table to log errors to
 		*	cErrorLogTextFile:			the name of the text file to log errors to
 		*	cImageFile:					the name and path of the image file for the
@@ -2292,7 +2296,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Purpose:			Initialize this class
 		* Author:			Doug Hennig
 		* Copyright:		(c) 1996-2021 Stonefield Software Inc.
-		* Last revision:	08/24/2021
+		* Last revision:	09/21/2021
 		* Parameters:		tcTitle       - the default title to use for the error
 		*						dialog
 		*					tlSetOnError  - .T. to set ON ERROR
@@ -2303,6 +2307,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Returns:			.T.
 		* Environment in:	if tlSetOnError is .T., this class must be instantiated
 		*						into the variable whose name is passed in tcErrorObject
+		*					This.cEncryptionLibrary contains the name of an FLL to open
 		* Environment out:	if tcTitle was passed, This.cTitle is set to it
 		*					if tlSetOnError was passed, This.lSetOnError is set to it
 		*					This.lErrorOccurred, This.lErrorInfoSaved, and
@@ -2316,7 +2321,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*						SFERRORMGR.H for the value of this constant)
 		*					This.lDisplayErrors is set to .F. if we're running in a COM
 		*						server
-		*					VFPEncryption71.fll was opened
+		*					The library specified in This.cEncryptionLibrary was opened
 		*==============================================================================
 		
 		* Set our message box title if one is passed. Set our lSetOnError property if
@@ -2358,10 +2363,9 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 				.lDisplayErrors = .F.
 			endif inlist(_vfp.StartMode, 2, 3, 5)
 		
-		* Open the VFPEncryption71 library.
+		* Open the encryption library.
 		
-			lcLibrary = 'VFPEncryption71.fll'
-			set library to (lcLibrary) additive
+			set library to (.cEncryptionLibrary) additive
 		endwith
 		
 	ENDPROC
