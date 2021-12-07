@@ -1098,7 +1098,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Based On:						Custom
 		* Purpose:						Error handler class
 		* Author:						Doug Hennig
-		* Copyright:					(c) 1996-2021 Stonefield Software Inc.
 		* Last revision:				08/21/2021
 		* Include file:					SFErrorMgr.h
 		*
@@ -1246,8 +1245,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Purpose:			Checks to see if we're in a TRY structure somewhere in the
 		*						call stack
 		* Author:			Doug Hennig
-		* Copyright:		(c) 2019-2021 Stonefield Software Inc.
-		* Last Revision:	03/09/2021
+		* Last Revision:	12/07/2021
 		* Parameters:		none
 		* Returns:			.T. if we're in a TRY structure somewhere in the call stack
 		* Environment in:	wwDotNetBridge is loaded into oBridge or is available to be
@@ -1267,6 +1265,9 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 			endif type('oBridge') <> 'O'
 			llInsideTry = oBridge.InvokeStaticMethod('InTry.InTry', 'IsTryActive', ;
 				_vfp)
+			if vartype(llInsideTry) <> 'L'
+				llInsideTry = This.lInsideTry
+			endif vartype(llInsideTry) <> 'L'
 		endif file('InTry.dll')
 		return llInsideTry
 		
@@ -1282,7 +1283,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Method:			CommandShell
 		* Purpose:			Command shell for runtime environments
 		* Author:			Doug Hennig
-		* Copyright:		(c) 1997-2005 Stonefield Software Inc.
 		* Last Revision:	01/12/2005
 		* Parameters:		none
 		* Environment in:	none
@@ -1303,7 +1303,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Protected
 		* Purpose:			Create a string describing the error
 		* Author:			Doug Hennig
-		* Copyright:		(c) 1996-2021 Stonefield Software Inc.
 		* Last revision:	03/12/2021
 		* Parameters:		none
 		* Returns:			a string describing the error
@@ -1403,7 +1402,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Creates a mail object
 		* Author:			Doug Hennig
-		* Copyright:		(c) 2021 Stonefield Software Inc.
 		* Last Revision:	03/22/2021
 		* Parameters:		none
 		* Returns:			a mail object
@@ -1424,7 +1422,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Creates a support ticket
 		* Author:			Doug Hennig
-		* Copyright:		(c) 2021 Stonefield Software Inc.
 		* Last Revision:	03/19/2021
 		* Parameters:		tcMessage     - the message
 		*					tcEmail       - the email address of the user
@@ -1451,7 +1448,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Creates a ticket or sends an email
 		* Author:			Doug Hennig
-		* Copyright:		(c) 2021 Stonefield Software Inc.
 		* Last Revision:	03/30/2021
 		* Parameters:		tcMessage - the message for the ticket or email
 		*					tcEmail   - the email address to use
@@ -1519,7 +1515,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Decrypts a string
 		* Author:			Doug Hennig
-		* Copyright:		(c) 2021 Stonefield Software Inc.
 		* Last Revision:	08/24/2021
 		* Parameters:		tcString - the string to decrypt
 		*					tcKey    - a key to decrypt against
@@ -1548,7 +1543,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Purpose:			Resets the former ON ERROR handler as the object is
 		*						destroyed
 		* Author:			Doug Hennig
-		* Copyright:		(c) 1996 Stonefield Software Inc.
 		* Last revision:	12/23/96
 		* Parameters:		None
 		* Returns:			.T.
@@ -1576,7 +1570,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*						return the value of the protected property
 		*						This.lErrorOccurred
 		* Author:			Doug Hennig
-		* Copyright:		(c) 1996 Stonefield Software Inc.
 		* Last revision:	08/23/96
 		* Parameters:		None
 		* Returns:			.T. if an error occured
@@ -1595,7 +1588,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Purpose:			Display an error dialog and allow the user to decide what
 		*						to do about it
 		* Author:			Doug Hennig
-		* Copyright:		(c) 1996-2021 Stonefield Software Inc.
 		* Last revision:	03/29/2021
 		* Parameters:		none
 		* Returns:			the user's choice (as the caption of the button selected)
@@ -1658,7 +1650,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Handle errors
 		* Author:			Doug Hennig
-		* Copyright:		(c) 1996-2021 Stonefield Software Inc.
 		* Last revision:	07/14/2021
 		* Parameters:		tnError  - the error number
 		*					tcMethod - the method or function the error occurred in
@@ -2295,7 +2286,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Initialize this class
 		* Author:			Doug Hennig
-		* Copyright:		(c) 1996-2021 Stonefield Software Inc.
 		* Last revision:	09/21/2021
 		* Parameters:		tcTitle       - the default title to use for the error
 		*						dialog
@@ -2376,7 +2366,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Protected
 		* Purpose:			Determines if the specified routine is on the call stack
 		* Author:			Doug Hennig
-		* Copyright:		(c) 1996-2021 Stonefield Software Inc.
 		* Last revision:	03/15/2021
 		* Parameters:		tcReturnTo - the method to return to
 		* Returns:			.T. if the specified routine is on the call stack
@@ -2414,7 +2403,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Protected
 		* Purpose:			Log the error to a log file
 		* Author:			Doug Hennig
-		* Copyright:		(c) 1996-2021 Stonefield Software Inc.
 		* Last revision:	07/13/2021
 		* Parameters:		None
 		* Returns:			.T.
@@ -2654,7 +2642,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Purpose:			Resets the error flag and array (an exposed method to
 		*						handle these protected properties)
 		* Author:			Doug Hennig
-		* Copyright:		(c) 1996-2021 Stonefield Software Inc.
 		* Last revision:	03/18/2021
 		* Parameters:		None
 		* Returns:			.T.
@@ -2678,7 +2665,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Protected
 		* Purpose:			Revert all cursors in all datasessions
 		* Author:			Doug Hennig
-		* Copyright:		(c) 1996-2005 Stonefield Software Inc.
 		* Last revision:	08/24/2005
 		* Parameters:		none
 		* Returns:			.T.
@@ -2704,7 +2690,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Protected
 		* Purpose:			Revert cursors in the current datasession
 		* Author:			Doug Hennig
-		* Copyright:		(c) 1997-2005 Stonefield Software Inc.
 		* Last Revision:	09/15/2005
 		* Parameters:		none
 		* Returns:			.T.
@@ -2748,7 +2733,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Takes a screen shot
 		* Author:			Doug Hennig
-		* Copyright:		(c) 2021 Stonefield Software Inc.
 		* Last Revision:	03/10/2021
 		* Parameters:		none
 		* Returns:			.T.
@@ -2776,7 +2760,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Sets properties of the error dialog before displaying it
 		* Author:			Doug Hennig
-		* Copyright:		(c) 1996-2021 Stonefield Software Inc.
 		* Last revision:	03/12/2021
 		* Parameters:		toDialog - a reference to the dialog
 		* Returns:			none
@@ -2797,7 +2780,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Purpose:			Sets lErrorOccurred and aErrorInfo to information about
 		*						the most recent error
 		* Author:			Doug Hennig
-		* Copyright:		(c) 1996-2021 Stonefield Software Inc.
 		* Last revision:	03/19/2021
 		* Parameters:		tcMethod - the method or function the error occurred in
 		*					tnLine   - the line number within tcMethod
@@ -2931,7 +2913,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Purpose:			Sets This.lSuppressErrors and returns its former value (an
 		*						exposed method to handle this protected property)
 		* Author:			Doug Hennig
-		* Copyright:		(c) 1996-2003 Stonefield Software Inc.
 		* Last revision:	09/30/2003
 		* Parameters:		tlSuppress - .T. to suppress errors or .F. to show them
 		* Returns:			the former value of This.lSuppressErrors

@@ -29,8 +29,8 @@ with oError
 * the user has logged in. If they aren't set, it isn't a problem because the
 * user can specify the values in the error dialog.
 
-	.cContact = 'Doug Hennig'
-	.cEmail   = 'dhennig@stonefieldquery.com'
+	.cContact = 'Someone'
+	.cEmail   = 'someone@someaddress.com'
 
 * Get the email settings for the demo. To run this on your machine, put the
 * correct settings into these properties.
@@ -41,12 +41,6 @@ with oError
 	.nSMTPPort   = 'Put port number for mail server here'
 	.cUserName   = 'Put user name for mail server here'
 	.cPassword   = Encrypt('Put password for mail server here', .cUserName)
-*** TODO: remove these lines
-.cMailServer = 'smtp.office365.com'
-.nSMTPPort   = 587
-.cRecipient  = 'dhennig@stonefieldquery.com'
-.cUserName   = filetostr('DontDeploy\User.txt')
-.cPassword   = Encrypt(filetostr('DontDeploy\Password.txt'), .cUserName)
 endwith
 
 * Display the main form.
