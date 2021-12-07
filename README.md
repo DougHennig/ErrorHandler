@@ -8,6 +8,10 @@ See ErrorHandler.docx for documentation.
 
 ## Releases
 
+### 2021-12-07
+
+* CheckInTry now handles wwDotNetBridge returning a non-logical value due to error, and removed copyright messages.
+
 ### 2021-09-21
 
 * You can now specify the name of the encryption library to use by changing the new cEncryptionLibrary property (set to "VFPEncryption71.dll" by default) if necessary.
