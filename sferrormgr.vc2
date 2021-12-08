@@ -263,7 +263,7 @@ DEFINE CLASS sferrormessagedialog AS form 		&& A modal dialog to display error m
 	ControlBox = .F.
 	Desktop = .T.
 	DoCreate = .T.
-	Height = 533
+	Height = 540
 	lsent = .F.		&& .T. if a ticket was created or email sent
 	MaxButton = .F.
 	MinButton = .F.
@@ -342,12 +342,12 @@ DEFINE CLASS sferrormessagedialog AS form 		&& A modal dialog to display error m
 
 	ADD OBJECT 'edtComments' AS editbox WITH ;
 		FontName = "Segoe UI", ;
-		Height = 68, ;
+		Height = 78, ;
 		Left = 20, ;
 		Name = "edtComments", ;
 		SelectOnEntry = .T., ;
 		TabIndex = 10, ;
-		Top = 240, ;
+		Top = 230, ;
 		Width = 440, ;
 		ZOrderSet = 14
 		*< END OBJECT: BaseClass="editbox" />
@@ -370,7 +370,8 @@ DEFINE CLASS sferrormessagedialog AS form 		&& A modal dialog to display error m
 		Left = 20, ;
 		Name = "lblComments", ;
 		TabIndex = 9, ;
-		Top = 220, ;
+		Top = 210, ;
+		Width = 389, ;
 		ZOrderSet = 10
 		*< END OBJECT: BaseClass="label" />
 
@@ -411,7 +412,7 @@ DEFINE CLASS sferrormessagedialog AS form 		&& A modal dialog to display error m
 		Name = "lblMessage3", ;
 		TabIndex = 4, ;
 		Top = 95, ;
-		Width = 431, ;
+		Width = 434, ;
 		WordWrap = .T., ;
 		ZOrderSet = 6
 		*< END OBJECT: BaseClass="label" />
@@ -559,6 +560,17 @@ DEFINE CLASS sferrormessagedialog AS form 		&& A modal dialog to display error m
 	ENDPROC
 
 	PROCEDURE GotFocus
+		* If lblComments is too long, word wrap it.
+		
+		doevents force
+		if This.lblComments.Width > This.lblMessage3.Width
+			This.lblComments.AutoSize = .F.
+			This.lblComments.WordWrap = .T.
+			This.lblComments.Height   = 30
+			This.lblComments.Width    = This.lblMessage3.Width
+			This.edtComments.Top      = 250
+			This.edtComments.Height   = 58
+		endif This.lblComments.Width > This.lblMessage3.Width
 		This.Refresh()
 		
 	ENDPROC
@@ -890,6 +902,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*p: cerrorlogfile		&& The name of the table to log errors to
 		*p: cerrorlogtextfile		&& The name of the text file to log errors to
 		*p: cimagefile		&& The name and path of the image file for the screen shot
+		*p: clanguage		&& The language to use for messages
 		*p: cmailclass		&& The class to use for emailing
 		*p: cmailerrormessage		&& The message of any error from the mail object
 		*p: cmaillibrary		&& The library containing the class specified in cMailClass
@@ -899,6 +912,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*p: cmessagelibrary		&& The library the message class is in
 		*p: cpassword		&& The email password
 		*p: crecipient		&& The recipient of the email
+		*p: cresourcetable		&& The name of the resource table to use
 		*p: creturntooncancel		&& The name of the program to return to when Cancel is chosen
 		*p: creturntoonquit		&& The name of the program to return to when Quit is chosen
 		*p: csenderemail		&& The sender's email address
@@ -955,6 +969,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 	cerrorlogfile = errorlog.dbf		&& The name of the table to log errors to
 	cerrorlogtextfile = 		&& The name of the text file to log errors to
 	cimagefile = 		&& The name and path of the image file for the screen shot
+	clanguage = English		&& The language to use for messages
 	cmailclass = SFMail		&& The class to use for emailing
 	cmailerrormessage = 		&& The message of any error from the mail object
 	cmaillibrary = SFMail.prg		&& The library containing the class specified in cMailClass
@@ -964,6 +979,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 	cmessagelibrary = SFErrorMgr.vcx		&& The library the message class is in
 	cpassword = 		&& The email password
 	crecipient = 		&& The recipient of the email
+	cresourcetable = Resource.dbf		&& The name of the resource table to use
 	creturntooncancel = MASTER		&& The name of the program to return to when Cancel is chosen
 	creturntoonquit = MASTER		&& The name of the program to return to when Quit is chosen
 	csenderemail = 		&& The sender's email address
@@ -1090,6 +1106,8 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		<memberdata name="calias" display="cAlias"/>
 		<memberdata name="lhandlingerror" display="lHandlingError"/>
 		<memberdata name="cencryptionlibrary" display="cEncryptionLibrary"/>
+		<memberdata name="clanguage" display="cLanguage"/>
+		<memberdata name="cresourcetable" display="cResourceTable"/>
 		</VFPData>		&& XML Metadata for customizable properties
 	
 	PROCEDURE about		&& Provides documentation for the class
@@ -1098,7 +1116,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Based On:						Custom
 		* Purpose:						Error handler class
 		* Author:						Doug Hennig
-		* Last revision:				08/21/2021
+		* Last revision:				12/08/2021
 		* Include file:					SFErrorMgr.h
 		*
 		* Changes in "Based On" class properties:
@@ -1126,6 +1144,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*	cErrorLogTextFile:			the name of the text file to log errors to
 		*	cImageFile:					the name and path of the image file for the
 		*								screen shot
+		*	cLanguage:					the language to use for messages
 		*	cMailClass:					the class to use for emailing
 		*	cMailErrorMessage:			the message of any error from the mail object
 		*	cMailLibrary:				the library containing the class specified in
@@ -1137,6 +1156,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*	cMessageLibrary:			the library the message class is in
 		*	cPassword:					the email password
 		*	cRecipient:					the recipient of the email
+		*	cResourceTable:				the name of the resource table to use
 		*	cReturnToOnCancel:			the name of the program to return to when
 		*								Cancel is chosen
 		*	cReturnToOnQuit:			the name of the program to return to when
@@ -1650,7 +1670,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Handle errors
 		* Author:			Doug Hennig
-		* Last revision:	07/14/2021
+		* Last revision:	12/08/2021
 		* Parameters:		tnError  - the error number
 		*					tcMethod - the method or function the error occurred in
 		*					tnLine   - the line number within tcMethod
@@ -1667,6 +1687,8 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*						displayed and no error logged
 		*					The "throttle" properties are set if error throttling
 		*						should occur
+		*					oLocalizer may be accessible and contain an SFLocalizer
+		*						object
 		* Environment out:	This.lErrorOccurred is .T.
 		*					This.cAlias is set to tcAlias
 		*					This.aErrorInfo is filled with error information (see
@@ -1772,6 +1794,16 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 						llReturn            = .IsReturnToOnCallStack(.cReturnToOnCancel)
 						lcReadEventsProgram = .cReturnToOnCancel
 						lcMasterProgram     = .cReturnToOnQuit
+		
+		* If we don't have a localizer object, create one if SFLocalize.vcx is
+		* available.
+		
+						if type('oLocalizer.Name') <> 'C' and file('SFLocalize.vcx')
+							private oLocalizer
+							oLocalizer                = newobject('SFLocalize', 'SFLocalize.vcx')
+							oLocalizer.cLanguage      = .cLanguage
+							oLocalizer.cResourceTable = .cResourceTable
+						endif type('oLocalizer.Name') <> 'C' ...
 		
 		* Handle error throttling.
 		

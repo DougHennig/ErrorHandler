@@ -41,6 +41,12 @@ with oError
 	.nSMTPPort   = 'Put port number for mail server here'
 	.cUserName   = 'Put user name for mail server here'
 	.cPassword   = Encrypt('Put password for mail server here', .cUserName)
+
+* Set the localizer settings (these are the defaults but are set here to show
+* how to change them).
+
+	.cLanguage      = 'English'
+	.cResourceTable = 'Resource.dbf'
 endwith
 
 * Display the main form.

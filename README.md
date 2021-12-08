@@ -8,6 +8,10 @@ See ErrorHandler.docx for documentation.
 
 ## Releases
 
+### 2021-12-08
+
+* Added localization support: see ErrorHandler.docx for information.
+
 ### 2021-12-07
 
 * CheckInTry now handles wwDotNetBridge returning a non-logical value due to error, and removed copyright messages.
