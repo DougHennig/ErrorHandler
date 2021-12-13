@@ -680,7 +680,7 @@ DEFINE CLASS sferrormessagedialog AS form 		&& A modal dialog to display error m
 		* Flag that the user wants to cancel the operation that caused the error but
 		* stay in the application, then return to the error manager.
 		
-		Thisform.cChoice = 'Cancel'
+		Thisform.cChoice = ccMSG_CANCEL
 		Thisform.Hide()
 		
 	ENDPROC
@@ -740,7 +740,7 @@ DEFINE CLASS sferrormessagedialog AS form 		&& A modal dialog to display error m
 	PROCEDURE cmdQuit.Click
 		* Flag that the user wants to quit and return to the error manager.
 		
-		Thisform.cChoice = 'Quit'
+		Thisform.cChoice = ccMSG_QUIT
 		Thisform.Hide()
 		
 	ENDPROC
@@ -1116,7 +1116,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Based On:						Custom
 		* Purpose:						Error handler class
 		* Author:						Doug Hennig
-		* Last revision:				12/08/2021
+		* Last revision:				12/13/2021
 		* Include file:					SFErrorMgr.h
 		*
 		* Changes in "Based On" class properties:
@@ -1133,6 +1133,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*	aErrorInfo:					an array containing error information; see the
 		*								SetError method documentation for the structure
 		*								of this array
+		*	cAlias:						the selected alias
 		*	cAppName:					the name of the application
 		*	cAttachments:				attachments for the email or support ticket
 		*	cContact:					the user's display name
@@ -1195,7 +1196,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*	lSetOnError:				.T. to set ON ERROR to point to the
 		*								ErrorHandler method
 		*	lShowDebug:					.T. if "debug" should be an option
-		*	lTicketCreated				.T. if a ticket was created
+		*	lTicketCreated:				.T. if a ticket was created
 		*	lUserCanSaveDialog:			.T. if the user can save the error log
 		*	nLastError:					the index to the last error that occurred in
 		*								aErrorInfo
@@ -1608,7 +1609,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Purpose:			Display an error dialog and allow the user to decide what
 		*						to do about it
 		* Author:			Doug Hennig
-		* Last revision:	03/29/2021
+		* Last revision:	12/13/2021
 		* Parameters:		none
 		* Returns:			the user's choice (as the caption of the button selected)
 		* Environment in:	see CreateErrorMessage for details
@@ -1647,19 +1648,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		This.lDisplayingErrorDialog = .F.
 		lcChoice = iif(vartype(loMessage) = 'O' and pemstatus(loMessage, 'cChoice', 5), ;
 			loMessage.cChoice, ccMSG_CONTINUE)
-		do case
-			case type('oLocalizer.Name') <> 'C'
-			case lcChoice = oLocalizer.GetLocalizedString('MSG_CANCELHOT', .T.)
-				lcChoice = ccMSG_CANCEL
-			case lcChoice = oLocalizer.GetLocalizedString('MSG_QUITHOT', .T.)
-				lcChoice = ccMSG_QUIT
-			case lcChoice = oLocalizer.GetLocalizedString('MSG_DEBUGHOT', .T.)
-				lcChoice = ccMSG_DEBUG
-			case lcChoice = oLocalizer.GetLocalizedString('MSG_RETRYHOT', .T.)
-				lcChoice = ccMSG_RETRY
-			otherwise
-				lcChoice = ccMSG_CONTINUE
-		endcase
 		return lcChoice
 		
 	ENDPROC
@@ -1944,7 +1932,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 					set talk on
 				endif lcCurrTalk = 'ON'
 			catch to loException
-		set step on 
 			endtry
 		endwith
 		

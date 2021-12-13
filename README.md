@@ -8,6 +8,12 @@ See ErrorHandler.docx for documentation.
 
 ## Releases
 
+### 2021-12-13
+
+* Tomislav Sokol added Croatian messages
+* Fixed a bug that prevented Quit from working for non-English languages
+* Removed unused records in Resource.dbf
+
 ### 2021-12-08
 
 * Added localization support: see ErrorHandler.docx for information.
