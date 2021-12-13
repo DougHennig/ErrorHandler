@@ -13,6 +13,7 @@ See ErrorHandler.docx for documentation.
 * Tomislav Sokol added Croatian messages
 * Fixed a bug that prevented Quit from working for non-English languages
 * Removed unused records in Resource.dbf
+* Takes a screen shot to a JPG rather than PNG and uses _SCREEN rather than _VFP.HWnd which works better on some systems
 
 ### 2021-12-08
 

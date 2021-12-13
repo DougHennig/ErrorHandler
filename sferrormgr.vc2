@@ -1868,7 +1868,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		
 							if .lScreenShot
 								try
-									erase (.cImageFile)
+		***							erase (.cImageFile)
 								catch
 								endtry
 							endif .lScreenShot
@@ -2752,7 +2752,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Takes a screen shot
 		* Author:			Doug Hennig
-		* Last Revision:	03/10/2021
+		* Last Revision:	12/13/2021
 		* Parameters:		none
 		* Returns:			.T.
 		* Environment in:	System.app or exe must be available
@@ -2762,11 +2762,11 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		
 		local loCaptureBmp
 		do System
-		This.cImageFile = addbs(sys(2023)) + sys(2015) + '.png'
+		This.cImageFile = addbs(sys(2023)) + sys(2015) + '.jpg'
 		with _screen.System.Drawing
 			try
-				loCaptureBmp = .Bitmap.FromScreen(_vfp.hWnd)
-				loCaptureBmp.Save(This.cImageFile, .Imaging.ImageFormat.Png)
+				loCaptureBmp = .Bitmap.FromScreen('_screen')
+				loCaptureBmp.Save(This.cImageFile, .Imaging.ImageFormat.JPEG)
 			catch
 			endtry
 		endwith
