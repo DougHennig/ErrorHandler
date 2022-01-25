@@ -8,6 +8,15 @@ See ErrorHandler.docx for documentation.
 
 ## Releases
 
+### 2022-01-25
+
+* Use TRY in CheckInTry in case wwDotNetBridge fails
+* Handle CLEAR ALL being executed in subclass at the end of ErrorHandler
+
+### 2021-12-23
+
+* Only SET LIBRARY TO encryption library if not already done
+
 ### 2021-12-13
 
 * Tomislav Sokol added Croatian messages
