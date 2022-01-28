@@ -8,6 +8,14 @@ See ErrorHandler.docx for documentation.
 
 ## Releases
 
+### 2022-01-28
+
+* Displays the error dialog when _SCREEN.Visible is .F. and there is no top-level form yet (such as at the start of an application).
+* Added a TRY in SFErrorMgr.Decrypt in case decryption fails.
+* Newer wwDotNetBridge files are now included.
+* Removed the TRY in CheckInTry (added 2022-01-25) or it acts like it's always inside a TRY; used ON ERROR instead.
+* Added CLEAR ALL to ImmediateExit.
+
 ### 2022-01-25
 
 * Use TRY in CheckInTry in case wwDotNetBridge fails

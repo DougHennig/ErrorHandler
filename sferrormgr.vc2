@@ -1116,7 +1116,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Based On:						Custom
 		* Purpose:						Error handler class
 		* Author:						Doug Hennig
-		* Last revision:				01/25/2022
+		* Last revision:				01/28/2022
 		* Include file:					SFErrorMgr.h
 		*
 		* Changes in "Based On" class properties:
@@ -1266,7 +1266,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Purpose:			Checks to see if we're in a TRY structure somewhere in the
 		*						call stack
 		* Author:			Doug Hennig
-		* Last Revision:	01/25/2022
+		* Last Revision:	01/28/2022
 		* Parameters:		none
 		* Returns:			.T. if we're in a TRY structure somewhere in the call stack
 		* Environment in:	wwDotNetBridge is loaded into oBridge or is available to be
@@ -1276,23 +1276,34 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*						before
 		*==============================================================================
 		
-		local llInsideTry
+		local llInsideTry, ;
+			lcOnError
 		llInsideTry = This.lInsideTry
-		try
-			if file('InTry.dll')
-				if type('oBridge') <> 'O'
-					do wwDotNetBridge
-					oBridge = GetwwDotNetBridge()
-					oBridge.LoadAssembly('InTry.dll')
-				endif type('oBridge') <> 'O'
-				llInsideTry = oBridge.InvokeStaticMethod('InTry.InTry', 'IsTryActive', ;
-					_vfp)
-				if vartype(llInsideTry) <> 'L'
-					llInsideTry = This.lInsideTry
-				endif vartype(llInsideTry) <> 'L'
-			endif file('InTry.dll')
-		catch
-		endtry
+		if file('InTry.dll')
+		
+		* Although it would be good to wrap this in a TRY, that would make IsTryActive
+		* always return .T. So, we'll use ON ERROR instead to eat any errors.
+		
+			lcOnError = on('ERROR')
+			on error *
+		
+		* Use InTry.dll to see if we're inside a TRY.
+		
+			if type('oBridge') <> 'O'
+				do wwDotNetBridge
+				oBridge = GetwwDotNetBridge()
+				oBridge.LoadAssembly('InTry.dll')
+			endif type('oBridge') <> 'O'
+			llInsideTry = oBridge.InvokeStaticMethod('InTry.InTry', 'IsTryActive', ;
+				_vfp)
+			if vartype(llInsideTry) <> 'L'
+				llInsideTry = This.lInsideTry
+			endif vartype(llInsideTry) <> 'L'
+		
+		* Restore the error handler.
+		
+			on error &lcOnError
+		endif file('InTry.dll')
 		return llInsideTry
 		
 	ENDPROC
@@ -1539,7 +1550,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Decrypts a string
 		* Author:			Doug Hennig
-		* Last Revision:	08/24/2021
+		* Last Revision:	01/28/2022
 		* Parameters:		tcString - the string to decrypt
 		*					tcKey    - a key to decrypt against
 		* Returns:			the decrypted string
@@ -1551,11 +1562,15 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 			tcKey
 		local lcReturn, ;
 			lcLibrary
-		if type('oUtility.Name') = 'C'
-			lcReturn = oUtility.Decrypt(tcString, tcKey)
-		else
-			lcReturn = strtran(Decrypt(tcString, tcKey), ccNULL)
-		endif type('oUtility.Name') = 'C'
+		try
+			if type('oUtility.Name') = 'C'
+				lcReturn = oUtility.Decrypt(tcString, tcKey)
+			else
+				lcReturn = strtran(Decrypt(tcString, tcKey), ccNULL)
+			endif type('oUtility.Name') = 'C'
+		catch
+			lcReturn = tcString
+		endtry
 		return lcReturn
 		
 	ENDPROC
@@ -1612,7 +1627,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Purpose:			Display an error dialog and allow the user to decide what
 		*						to do about it
 		* Author:			Doug Hennig
-		* Last revision:	12/13/2021
+		* Last revision:	01/28/2022
 		* Parameters:		none
 		* Returns:			the user's choice (as the caption of the button selected)
 		* Environment in:	see CreateErrorMessage for details
@@ -1620,7 +1635,9 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*						of several choices taken
 		*==============================================================================
 		
-		local lcMessage, ;
+		local llScreen, ;
+			lnLeft, ;
+			lcMessage, ;
 			loMessage, ;
 			lcChoice
 		
@@ -1642,6 +1659,17 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 			This.cReturnToOnCancel <> 'STARTUP' and ;
 			This.IsReturnToOnCallStack(This.cReturnToOnCancel)
 		
+		* Because the error dialog may need to appear in a top-level form (TLF) and we
+		* may not have one if the application has _SCREEN turned off and no TLF has
+		* been shown yet, we'll make _SCREEN visible.
+		
+		llScreen = _screen.Visible
+		if not llScreen
+			lnLeft          = _screen.Left
+			_screen.Left    = -10000
+			_screen.Visible = .T.
+		endif not llScreen
+		
 		* Display the messagebox and find out the user's choice.
 		
 		loMessage = newobject(This.cMessageClass, This.cMessageLibrary, '', This)
@@ -1651,6 +1679,13 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		This.lDisplayingErrorDialog = .F.
 		lcChoice = iif(vartype(loMessage) = 'O' and pemstatus(loMessage, 'cChoice', 5), ;
 			loMessage.cChoice, ccMSG_CONTINUE)
+		
+		* Hide _SCREEN if necessary.
+		
+		if not llScreen
+			_screen.Left    = lnLeft
+			_screen.Visible = .F.
+		endif not llScreen
 		return lcChoice
 		
 	ENDPROC
@@ -2299,6 +2334,10 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		
 		* Terminate the program.
 		
+			try
+				clear all
+			catch
+			endtry
 			cancel
 		endif version(2) = 0
 		

@@ -1,3 +1,12 @@
+* The reason we have a separate MyApp procedure is if the user chooses Quit, it
+* does a RETURN TO MASTER, so the program will terminate.
+
+do MyApp
+do ShutDown
+
+
+procedure MyApp
+
 * Get the "debug" mode setting.
 
 llDebugMode = .F.
@@ -35,12 +44,13 @@ with oError
 * Get the email settings for the demo. To run this on your machine, put the
 * correct settings into these properties.
 
-	set library to VFPEncryption
-	.cRecipient  = 'Put email address of recipient here'
-	.cMailServer = 'Put address of mail server here'
-	.nSMTPPort   = 'Put port number for mail server here'
-	.cUserName   = 'Put user name for mail server here'
-	.cPassword   = Encrypt('Put password for mail server here', .cUserName)
+	set library to VFPEncryption71
+	.cRecipient   = 'Put email address of recipient here'
+	.cSenderEmail = 'Put email address of sender here'
+	.cMailServer  = 'Put address of mail server here'
+	.nSMTPPort    = 'Put port number for mail server here'
+	.cUserName    = 'Put user name for mail server here'
+	.cPassword    = Encrypt('Put password for mail server here', .cUserName)
 
 * Set the localizer settings (these are the defaults but are set here to show
 * how to change them).
@@ -59,6 +69,10 @@ do form Sample
 * routine containing the READ EVENTS statement.
 
 do ReadEvents
+do ShutDown
+
+
+procedure ShutDown
 
 * Clean up before we exit (some of this stuff is generic and not actually
 * needed in this sample; e.g. we didn't open any tables so don't really need
