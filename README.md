@@ -8,6 +8,10 @@ See ErrorHandler.docx for documentation.
 
 ## Releases
 
+### 2022-02-25
+
+* SetError now accepts a string as the fourth parameter in case you want to log something that isn't an actual error (call SetError, then LogError).
+
 ### 2022-01-28
 
 * Displays the error dialog when _SCREEN.Visible is .F. and there is no top-level form yet (such as at the start of an application).

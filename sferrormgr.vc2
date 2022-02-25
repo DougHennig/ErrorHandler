@@ -1116,7 +1116,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Based On:						Custom
 		* Purpose:						Error handler class
 		* Author:						Doug Hennig
-		* Last revision:				01/28/2022
+		* Last revision:				02/25/2022
 		* Include file:					SFErrorMgr.h
 		*
 		* Changes in "Based On" class properties:
@@ -2848,12 +2848,14 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Purpose:			Sets lErrorOccurred and aErrorInfo to information about
 		*						the most recent error
 		* Author:			Doug Hennig
-		* Last revision:	03/19/2021
+		* Copyright:		(c) 1996-2022 Stonefield Software Inc.
+		* Last revision:	02/25/2022
 		* Parameters:		tcMethod - the method or function the error occurred in
 		*					tnLine   - the line number within tcMethod
 		*					tcSource - the code causing the error
 		*					tuError  - an array of error information or an Exception
-		*						object
+		*						object (optional: only needed if we're logging a real
+		*						error)
 		* Returns:			.T.
 		* Environment in:	This.aErrorInfo is dimensioned appropriately
 		*					This.lErrorSet is .T. if this method has already been called
@@ -2882,8 +2884,11 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 			tnLine, ;
 			tcSource, ;
 			tuError
-		local lnRows, ;
+		local lcType, ;
+			llException, ;
+			lnRows, ;
 			lnCols, ;
+			llMessage, ;
 			lnLast, ;
 			lnError, ;
 			lnRow, ;
@@ -2901,14 +2906,20 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		
 				.lErrorOccurred  = .T.
 				.lErrorInfoSaved = .T.
-				llException      = vartype(tuError) = 'O'
-				if llException
-					lnRows = 1
-					lnCols = 1
-				else
-					lnRows = alen(tuError, 1)
-					lnCols = alen(tuError, 2)
-				endif llException
+				lcType           = vartype(tuError)
+				llException      = lcType = 'O'
+				do case
+					 case llException
+						lnRows = 1
+						lnCols = 1
+					case lcType = 'A'
+						lnRows = alen(tuError, 1)
+						lnCols = alen(tuError, 2)
+					otherwise
+						lnCols    = 0
+						lnRows    = 0
+						llMessage = lcType = 'C'
+				endcase
 		
 		* If we're past the maximum size of the array, delete a row. Otherwise, set the
 		* next row number.
@@ -2953,7 +2964,8 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		
 						otherwise
 							.aErrorInfo[lnRow, cnAERR_NUMBER]  = 0
-							.aErrorInfo[lnRow, cnAERR_MESSAGE] = ''
+							.aErrorInfo[lnRow, cnAERR_MESSAGE] = iif(llMessage, ;
+								tuError, '')
 					endcase
 		
 		* Add some additional information to the current row in our array.
