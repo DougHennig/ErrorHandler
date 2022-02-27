@@ -1116,7 +1116,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Based On:						Custom
 		* Purpose:						Error handler class
 		* Author:						Doug Hennig
-		* Last revision:				02/25/2022
+		* Last revision:				02/27/2022
 		* Include file:					SFErrorMgr.h
 		*
 		* Changes in "Based On" class properties:
@@ -2849,7 +2849,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*						the most recent error
 		* Author:			Doug Hennig
 		* Copyright:		(c) 1996-2022 Stonefield Software Inc.
-		* Last revision:	02/25/2022
+		* Last revision:	02/27/2022
 		* Parameters:		tcMethod - the method or function the error occurred in
 		*					tnLine   - the line number within tcMethod
 		*					tcSource - the code causing the error
@@ -2906,7 +2906,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		
 				.lErrorOccurred  = .T.
 				.lErrorInfoSaved = .T.
-				lcType           = vartype(tuError)
+				lcType           = type('tuError', 1)
 				llException      = lcType = 'O'
 				do case
 					 case llException

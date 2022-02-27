@@ -8,6 +8,10 @@ See ErrorHandler.docx for documentation.
 
 ## Releases
 
+### 2022-02-27
+
+* Fixed a typo in SetError.
+
 ### 2022-02-25
 
 * SetError now accepts a string as the fourth parameter in case you want to log something that isn't an actual error (call SetError, then LogError).
