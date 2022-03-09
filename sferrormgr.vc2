@@ -238,6 +238,7 @@ DEFINE CLASS sferrormessagedialog AS form 		&& A modal dialog to display error m
 	*< OBJECTDATA: ObjPath="txtSenderEmail" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="lblSendReport" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="lblRecover" UniqueID="" Timestamp="" />
+	*< OBJECTDATA: ObjPath="tmrFocus" UniqueID="" Timestamp="" />
 
 	#INCLUDE "sferrormgr.h"
 	*<DefinedPropArrayMethod>
@@ -527,6 +528,15 @@ DEFINE CLASS sferrormessagedialog AS form 		&& A modal dialog to display error m
 		Top = 76, ;
 		Width = 465
 		*< END OBJECT: BaseClass="shape" />
+
+	ADD OBJECT 'tmrFocus' AS timer WITH ;
+		Height = 23, ;
+		Interval = 500, ;
+		Left = 55, ;
+		Name = "tmrFocus", ;
+		Top = 505, ;
+		Width = 23
+		*< END OBJECT: BaseClass="timer" />
 
 	ADD OBJECT 'txtSenderEmail' AS textbox WITH ;
 		ControlSource = "Thisform.cEmail", ;
@@ -847,6 +857,16 @@ DEFINE CLASS sferrormessagedialog AS form 		&& A modal dialog to display error m
 		if type('oLocalizer.Name') = 'C'
 			This.Caption = oLocalizer.GetLocalizedString('LBL_CAP_ERROR_9', , .T.)
 		endif type('oLocalizer.Name') = 'C'
+		
+	ENDPROC
+
+	PROCEDURE tmrFocus.Timer
+		* Force us to be the top window if not.
+		
+		if not wontop() = Thisform.Name
+			activate window (Thisform.Name)
+			This.Enabled = .F.
+		endif not wontop() = Thisform.Name
 		
 	ENDPROC
 

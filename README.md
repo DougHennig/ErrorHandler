@@ -8,6 +8,10 @@ See ErrorHandler.docx for documentation.
 
 ## Releases
 
+### 2022-03-09
+
+* At Tomislav Sokol's suggestion, added a timer to SFErrorMessageDialog to force it to be the active window if it isn't.
+
 ### 2022-02-27
 
 * Fixed a typo in SetError.
