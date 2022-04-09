@@ -4,7 +4,7 @@ ErrorHandler provides a highly configurable and customizable error handler for a
 
 ![](errordialog.png)
 
-See ErrorHandler.docx for documentation.
+See [ErrorHandler.docx](ErrorHandler.docx) for documentation.
 
 ## Helping with this project
 
