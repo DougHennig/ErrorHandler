@@ -372,7 +372,6 @@ DEFINE CLASS sferrormessagedialog AS form 		&& A modal dialog to display error m
 		Name = "lblComments", ;
 		TabIndex = 9, ;
 		Top = 210, ;
-		Width = 389, ;
 		ZOrderSet = 10
 		*< END OBJECT: BaseClass="label" />
 
@@ -532,9 +531,9 @@ DEFINE CLASS sferrormessagedialog AS form 		&& A modal dialog to display error m
 	ADD OBJECT 'tmrFocus' AS timer WITH ;
 		Height = 23, ;
 		Interval = 500, ;
-		Left = 55, ;
+		Left = 65, ;
 		Name = "tmrFocus", ;
-		Top = 505, ;
+		Top = 495, ;
 		Width = 23
 		*< END OBJECT: BaseClass="timer" />
 
@@ -642,14 +641,16 @@ DEFINE CLASS sferrormessagedialog AS form 		&& A modal dialog to display error m
 
 	PROCEDURE Show
 		lparameters tnStyle
-		local lnAdjust
+		local llLocalizer, ;
+			lnAdjust
 		with This
 		
 		* Set the captions appropriately.
 		
+			llLocalizer = type('oLocalizer.Name') = 'C'
 			.Caption = .oErrorMgr.cTitle
 			do case
-				case type('oLocalizer.Name') = 'C'
+				case llLocalizer
 					.Caption = oLocalizer.GetLocalizedString('STR_ERROR')
 					if .oErrorMgr.lCanCancel
 						.lblMessage5.Caption = oLocalizer.GetLocalizedString('LBL_CAP_ERROR_4')
@@ -659,6 +660,15 @@ DEFINE CLASS sferrormessagedialog AS form 		&& A modal dialog to display error m
 				case not .oErrorMgr.lCanCancel
 					.lblMessage5.Caption = 'Due to the nature of the error, the ' + ;
 						'application must shut down. Please click Quit.'
+			endcase
+			do case
+				case not .oErrorMgr.lScreenShot
+				case llLocalizer
+					.lblMessage4.Caption = .lblMessage4.Caption + ' ' + ;
+						oLocalizer.GetLocalizedString('LBL_CAP_ERROR_SCREEN_SHOT')
+				otherwise
+					.lblMessage4.Caption = .lblMessage4.Caption + ;
+						' A screen shot is automatically included.'
 			endcase
 		
 		* Hide some controls if necessary.
@@ -1136,7 +1146,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Based On:						Custom
 		* Purpose:						Error handler class
 		* Author:						Doug Hennig
-		* Last revision:				02/27/2022
+		* Last revision:				04/09/2022
 		* Include file:					SFErrorMgr.h
 		*
 		* Changes in "Based On" class properties:
@@ -1989,7 +1999,12 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 				if lcCurrTalk = 'ON'
 					set talk on
 				endif lcCurrTalk = 'ON'
+		
+		* If an exception happens in the error handler itself, open the debugger (only
+		* when running in the IDE).
+		
 			catch to loException
+				set step on
 			endtry
 		endwith
 		
@@ -2440,10 +2455,15 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Open the encryption library.
 		
 			lcLibrary = lower(set('LIBRARY'))
-			if file(.cEncryptionLibrary) and ;
-				not lower(justfname(.cEncryptionLibrary)) $ lcLibrary
-				set library to (.cEncryptionLibrary) additive
-			endif file(.cEncryptionLibrary) ...
+			do case
+				case file(.cEncryptionLibrary) and ;
+					not lower(justfname(.cEncryptionLibrary)) $ lcLibrary
+					set library to (.cEncryptionLibrary) additive
+				case file('VFPEncryption.fll') and not 'vfpencryption.fll' $ lcLibrary
+					set library to ('VFPEncryption.fll') additive
+				case file('Encryption.fll') and not 'encryption.fll' $ lcLibrary
+					set library to ('Encryption.fll') additive
+			endcase
 		endwith
 		
 	ENDPROC
@@ -2821,7 +2841,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Takes a screen shot
 		* Author:			Doug Hennig
-		* Last Revision:	12/13/2021
+		* Last Revision:	04/09/2022
 		* Parameters:		none
 		* Returns:			.T.
 		* Environment in:	System.app or exe must be available
@@ -2834,7 +2854,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		This.cImageFile = addbs(sys(2023)) + sys(2015) + '.jpg'
 		with _screen.System.Drawing
 			try
-				loCaptureBmp = .Bitmap.FromScreen('_screen')
+				loCaptureBmp = .Bitmap.FromScreen(_vfp.hWnd)
 				loCaptureBmp.Save(This.cImageFile, .Imaging.ImageFormat.JPEG)
 			catch
 			endtry
@@ -2868,7 +2888,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Purpose:			Sets lErrorOccurred and aErrorInfo to information about
 		*						the most recent error
 		* Author:			Doug Hennig
-		* Copyright:		(c) 1996-2022 Stonefield Software Inc.
 		* Last revision:	02/27/2022
 		* Parameters:		tcMethod - the method or function the error occurred in
 		*					tnLine   - the line number within tcMethod

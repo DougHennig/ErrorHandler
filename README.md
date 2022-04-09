@@ -4,9 +4,17 @@ ErrorHandler provides a highly configurable and customizable error handler for a
 
 ![](errordialog.png)
 
-See ErrorHandler.docx for documentation.  
+See ErrorHandler.docx for documentation.
+
+## Helping with this project
+
+See [How to contribute to Error Handler](.github/CONTRIBUTING.md) for details on how to help with this project.
 
 ## Releases
+
+### 2022-04-09
+
+* It now takes a screen shot of the correct monitor (the one the app is running on) if there's more than one and displays a message that a screen shot is taken in the error dialog.
 
 ### 2022-03-09
 
