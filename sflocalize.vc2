@@ -5,7 +5,7 @@
 *< FOXBIN2PRG: Version="1.19" SourceFile="sflocalize.vcx" /> (Solo para binarios VFP 9 / Only for VFP 9 binaries)
 *
 *
-DEFINE CLASS sflocalize AS sfcustom OF "sfctrls.vcx" 
+DEFINE CLASS sflocalize AS custom 
  	*< CLASSDATA: Baseclass="custom" Timestamp="" Scale="Pixels" Uniqueid="" />
 
 	*<DefinedPropArrayMethod>
@@ -18,6 +18,7 @@ DEFINE CLASS sflocalize AS sfcustom OF "sfctrls.vcx"
 		*p: clanguage		&& The language to use for localized resources
 		*p: cresourcesfolder		&& The folder for additional resource files
 		*p: cresourcetable		&& The name and path for the resource table
+		*p: _memberdata
 	*</DefinedPropArrayMethod>
 
 	PROTECTED calias
@@ -26,16 +27,17 @@ DEFINE CLASS sflocalize AS sfcustom OF "sfctrls.vcx"
 	cresourcesfolder = 		&& The folder for additional resource files
 	cresourcetable = 		&& The name and path for the resource table
 	Name = "sflocalize"
+	Width = 17
 	_memberdata = <VFPData>
 		<memberdata name="calias" type="property" display="cAlias"/>
 		<memberdata name="clanguage" type="property" display="cLanguage"/>
+		<memberdata name="cresourcesfolder" type="property" display="cResourcesFolder"/>
+		<memberdata name="cresourcesfolder_assign" type="method" display="cResourcesFolder_Assign"/>
 		<memberdata name="cresourcetable" type="property" display="cResourceTable"/>
+		<memberdata name="getadditionalresources" type="method" display="GetAdditionalResources"/>
 		<memberdata name="getlanguages" type="method" display="GetLanguages"/>
 		<memberdata name="getlocalizedstring" type="method" display="GetLocalizedString"/>
 		<memberdata name="openresourcetable" type="method" display="OpenResourceTable"/>
-		<memberdata name="getadditionalresources" display="GetAdditionalResources"/>
-		<memberdata name="cresourcesfolder" display="cResourcesFolder"/>
-		<memberdata name="cresourcesfolder_assign" display="cResourcesFolder_Assign"/>
 		</VFPData>
 	
 	PROCEDURE cresourcesfolder_assign
@@ -200,326 +202,6 @@ DEFINE CLASS sflocalize AS sfcustom OF "sfctrls.vcx"
 			select (lnSelect)
 		endwith
 		return llReturn
-		
-	ENDPROC
-
-	PROCEDURE releasemembers
-		with This
-			if not empty(.cAlias) and used(.cAlias)
-				use in (.cAlias)
-			endif not empty(.cAlias) ...
-		endwith
-		dodefault()
-		
-	ENDPROC
-
-ENDDEFINE
-
-DEFINE CLASS sflocalizebuilder AS sfform OF "sfctrls.vcx" 
- 	*< CLASSDATA: Baseclass="form" Timestamp="" Scale="Pixels" Uniqueid="" />
-
-	*-- OBJECTDATA items order determines ZOrder / El orden de los items OBJECTDATA determina el ZOrder 
-	*< OBJECTDATA: ObjPath="lblName" UniqueID="" Timestamp="" />
-	*< OBJECTDATA: ObjPath="txtName" UniqueID="" Timestamp="" />
-	*< OBJECTDATA: ObjPath="lblCaption" UniqueID="" Timestamp="" />
-	*< OBJECTDATA: ObjPath="txtCaption" UniqueID="" Timestamp="" />
-	*< OBJECTDATA: ObjPath="lblResource" UniqueID="" Timestamp="" />
-	*< OBJECTDATA: ObjPath="txtResource" UniqueID="" Timestamp="" />
-	*< OBJECTDATA: ObjPath="cmdSave" UniqueID="" Timestamp="" />
-	*< OBJECTDATA: ObjPath="lblUsedIn" UniqueID="" Timestamp="" />
-	*< OBJECTDATA: ObjPath="cboUsedIn" UniqueID="" Timestamp="" />
-
-	*<DefinedPropArrayMethod>
-		*m: selfregister		&& Registers the builder
-		*p: lresourceused		&& .T. if the resource file is open
-		*p: oobject		&& A reference to the object the builder is for
-	*</DefinedPropArrayMethod>
-
-	Caption = "Localization Builder"
-	DoCreate = .T.
-	Height = 149
-	lresourceused = .F.		&& .T. if the resource file is open
-	MaxButton = .F.
-	MinButton = .F.
-	Name = "sflocalizebuilder"
-	oobject = NULL		&& A reference to the object the builder is for
-	Width = 309
-	WindowType = 1
-	_memberdata = <VFPData>
-		<memberdata name="oobject" display="oObject"/>
-		<memberdata name="lresourceused" display="lResourceUsed"/>
-		<memberdata name="selfregister" display="SelfRegister"/>
-		</VFPData>
-
-	ADD OBJECT 'cboUsedIn' AS sfcombobox WITH ;
-		Height = 24, ;
-		Left = 65, ;
-		Name = "cboUsedIn", ;
-		TabIndex = 8, ;
-		Top = 80, ;
-		Visible = .T., ;
-		Width = 235
-		*< END OBJECT: ClassLib="sfctrls.vcx" BaseClass="combobox" />
-
-	ADD OBJECT 'cmdSave' AS sfcommandbutton WITH ;
-		Caption = "Save", ;
-		Left = 112, ;
-		Name = "cmdSave", ;
-		TabIndex = 9, ;
-		Top = 116, ;
-		Visible = .T.
-		*< END OBJECT: ClassLib="sfctrls.vcx" BaseClass="commandbutton" />
-
-	ADD OBJECT 'lblCaption' AS sflabel WITH ;
-		Caption = "Caption", ;
-		Left = 10, ;
-		Name = "lblCaption", ;
-		TabIndex = 3, ;
-		Top = 33, ;
-		Visible = .T.
-		*< END OBJECT: ClassLib="sfctrls.vcx" BaseClass="label" />
-
-	ADD OBJECT 'lblName' AS sflabel WITH ;
-		Caption = "Name", ;
-		Left = 10, ;
-		Name = "lblName", ;
-		TabIndex = 1, ;
-		Top = 8, ;
-		Visible = .T.
-		*< END OBJECT: ClassLib="sfctrls.vcx" BaseClass="label" />
-
-	ADD OBJECT 'lblResource' AS sflabel WITH ;
-		Caption = "Resource", ;
-		Left = 10, ;
-		Name = "lblResource", ;
-		TabIndex = 5, ;
-		Top = 58, ;
-		Visible = .T.
-		*< END OBJECT: ClassLib="sfctrls.vcx" BaseClass="label" />
-
-	ADD OBJECT 'lblUsedIn' AS sflabel WITH ;
-		Caption = "Used in", ;
-		Left = 10, ;
-		Name = "lblUsedIn", ;
-		TabIndex = 7, ;
-		Top = 84, ;
-		Visible = .T.
-		*< END OBJECT: ClassLib="sfctrls.vcx" BaseClass="label" />
-
-	ADD OBJECT 'txtCaption' AS sftextbox WITH ;
-		Height = 22, ;
-		Left = 65, ;
-		Name = "txtCaption", ;
-		TabIndex = 4, ;
-		Top = 30, ;
-		Visible = .T., ;
-		Width = 235
-		*< END OBJECT: ClassLib="sfctrls.vcx" BaseClass="textbox" />
-
-	ADD OBJECT 'txtName' AS sftextbox WITH ;
-		Height = 22, ;
-		Left = 65, ;
-		Name = "txtName", ;
-		TabIndex = 2, ;
-		Top = 5, ;
-		Visible = .T., ;
-		Width = 175
-		*< END OBJECT: ClassLib="sfctrls.vcx" BaseClass="textbox" />
-
-	ADD OBJECT 'txtResource' AS sftextbox WITH ;
-		Format = "!", ;
-		Height = 22, ;
-		Left = 65, ;
-		Name = "txtResource", ;
-		SelectOnEntry = .F., ;
-		TabIndex = 6, ;
-		Top = 55, ;
-		Visible = .T., ;
-		Width = 235
-		*< END OBJECT: ClassLib="sfctrls.vcx" BaseClass="textbox" />
-	
-	PROCEDURE Init
-		lparameters tP1, ;
-			tP2, ;
-			tP3
-		local laObjects[1], ;
-			lnObjects, ;
-			loObject, ;
-			lcClass, ;
-			lcPrefix
-		
-		* Get the selected object. Try to self-register if there isn't one.
-		
-		lnObjects = aselobj(laObjects)
-		do case
-			case lnObjects = 1
-				store laObjects[1] to loObject, This.oObject
-			case messagebox('No objects are selected. Would you like to see if ' + ;
-				'this builder needs to be registered?', 4 + 32, This.Caption) = 6
-				This.SelfRegister()
-		endcase
-		if lnObjects = 0
-			This.ReleaseMembers()
-			return .F.
-		endif lnObjects = 0
-		
-		* Use the class of the object as the prefix for the resource.
-		
-		lcClass = upper(loObject.BaseClass)
-		do case
-			case lcClass = 'LABEL'
-				lcPrefix = 'LBL_CAP_'
-			case lcClass = 'COMMANDBUTTON'
-				lcPrefix = 'CMD_CAP_'
-			case lcClass = 'CHECKBOX'
-				lcPrefix = 'CHK_CAP_'
-			case lcClass = 'OPTIONBUTTON'
-				lcPrefix = 'OPB_CAP_'
-			case lcClass = 'PAGE'
-				lcPrefix = 'PAGE_CAP_'
-		endcase
-		
-		* Get the initial settings.
-		
-		This.txtName.Value     = loObject.Name
-		This.txtCaption.Value  = loObject.Caption
-		This.txtResource.Value = lcPrefix
-		dodefault()
-		
-	ENDPROC
-
-	PROCEDURE Load
-		* Open the resource table if necessary.
-		
-		This.lResourceUsed = used('SQRESOURCE')
-		if not This.lResourceUsed
-			use \Development\SFQuery\SFQueryDevFramework9\Data\SQResource in 0
-		endif not This.lResourceUsed
-		dodefault()
-		
-	ENDPROC
-
-	PROCEDURE releasemembers
-		* Close the resource table if we opened it.
-		
-		if not This.lResourceUsed
-			use in SQRESOURCE
-		endif not This.lResourceUsed
-		
-	ENDPROC
-
-	PROCEDURE selfregister		&& Registers the builder
-		local lnSelect, ;
-			lcBuilderName, ;
-			llAlreadyRegistered, ;
-			llRegistered
-		lnSelect = select()
-		select 0
-		use (home() + 'Wizards\Builder') again shared alias curRegBuilder
-		lcBuilderName = 'Localization Builder'
-		locate for NAME = lcBuilderName
-		if found()
-			llAlreadyRegistered = .T.
-		else
-			scatter memvar memo blank
-			Name      = lcBuilderName
-			Descript  = 'Localizes an object'
-			Type      = 'ALL'
-			ClassLib  = This.ClassLibrary
-			ClassName = This.Class
-			insert into curRegBuilder from memvar
-			llRegistered = .T.
-		endif
-		do case
-			case llRegistered
-				messagebox(lcBuilderName + ' has been registered.', lcBuilderName)
-			case llAlreadyRegistered
-				messagebox(lcBuilderName + ' was already registered.', lcBuilderName)
-		endcase
-		use in (select('curRegBuilder'))
-		select (lnSelect)
-		return
-		
-	ENDPROC
-
-	PROCEDURE cboUsedIn.anychange
-		Thisform.cmdSave.Refresh()
-		
-	ENDPROC
-
-	PROCEDURE cboUsedIn.Init
-		select distinct USEDIN from SQRESOURCE order by USEDIN into array This.aItems
-		dodefault()
-		
-	ENDPROC
-
-	PROCEDURE cmdSave.Click
-		local lcCaption, ;
-			lcResource, ;
-			lcUsedIn, ;
-			lcCode, ;
-			lcFolder
-		
-		* Get the caption, resource, and code for Init.
-		
-		lcCaption  = alltrim(Thisform.txtCaption.Value)
-		lcResource = alltrim(Thisform.txtResource.Value)
-		lcUsedIn   = Thisform.cboUsedIn.aItems[Thisform.cboUsedIn.ListIndex]
-		text to lcCode noshow textmerge
-		This.Caption = oLocalizer.GetLocalizedString('<<lcResource>>')
-		dodefault()
-		
-		endtext
-		
-		* Set the object's properties, write the code, and add the resource to the
-		* resource table.
-		
-		Thisform.oObject.Name    = alltrim(Thisform.txtName.Value)
-		Thisform.oObject.Caption = lcCaption
-		Thisform.oObject.WriteMethod('Init', lcCode)
-		insert into SQResource (RESTYPE, RESOURCE, ENGLISH, USEDIN, MODIFIED) ;
-			values ('S', lcResource, lcCaption, lcUsedIn, datetime())
-		
-		* Generate the text equivalent of the resource table and exit.
-		
-		try
-			lcFolder = execscript(_screen.cThorDispatcher, ;
-				'Thor_Proc_GetFoxBin2PrgFolder')
-			do (lcFolder + 'FoxBin2PRG') with dbf()
-		catch
-		endtry
-		Thisform.Release()
-		
-	ENDPROC
-
-	PROCEDURE cmdSave.Refresh
-		This.Enabled = not empty(Thisform.txtName.Value) and ;
-			not empty(Thisform.txtCaption.Value) and ;
-			not empty(Thisform.txtResource.Value) and ;
-			Thisform.cboUsedIn.ListIndex > 0 and ;
-			not empty(Thisform.cboUsedIn.aItems[Thisform.cboUsedIn.ListIndex])
-		
-	ENDPROC
-
-	PROCEDURE txtCaption.anychange
-		Thisform.cmdSave.Refresh()
-		
-	ENDPROC
-
-	PROCEDURE txtName.anychange
-		Thisform.cmdSave.Refresh()
-		
-	ENDPROC
-
-	PROCEDURE txtResource.anychange
-		Thisform.cmdSave.Refresh()
-		
-	ENDPROC
-
-	PROCEDURE txtResource.GotFocus
-		if not empty(This.Value)
-			This.SelStart = len(This.Value)
-		endif not empty(This.Value)
 		
 	ENDPROC
 

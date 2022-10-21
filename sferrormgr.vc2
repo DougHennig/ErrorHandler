@@ -783,7 +783,14 @@ DEFINE CLASS sferrormessagedialog AS form 		&& A modal dialog to display error m
 			else
 				lcFileName = '"' + lcFileName + '"'
 				try
-					run /n Notepad &lcFileName
+					declare integer ShellExecute in SHELL32.DLL ;
+						integer nWinHandle, ;	&& handle of parent window
+						string cOperation, ;	&& operation to perform
+						string cFileName, ;		&& filename
+						string cParameters, ;	&& parameters for the executable
+						string cDirectory, ;	&& default directory
+						integer nShowWindow		&& window state
+					ShellExecute(0, 'Open', lcFileName, '', '', 1)
 				catch
 				endtry
 			endif type('oUtility.Name') = 'C'
@@ -923,6 +930,8 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*p: calias		&& The selected alias
 		*p: cappname		&& The name of the application
 		*p: cattachments		&& Attachments for the email or support ticket
+		*p: cconsoleclass		&& The class to use for a debugging console at runtime
+		*p: cconsolelibrary		&& The library containing the class specified in cConsoleClass
 		*p: ccontact		&& The user's display name
 		*p: ccurrerror		&& The former ON ERROR handler.
 		*p: cdefaultaction		&& The default action to take
@@ -973,6 +982,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*p: lsuppresserrors		&& If .T., an error isn't logged or displayed
 		*p: lticketcreated		&& .T. if a ticket was created
 		*p: lusercansavedialog		&& .T. if the user can save the error log
+		*p: ndatasession		&& The datasession the error occurred in
 		*p: nlasterror		&& The index to the last error that occurred in aErrorInfo
 		*p: nmaxerrors		&& The maximum number of entries in aErrorInfo; 0 = no limit
 		*p: nreturncode		&& The return code for ExitProcess
@@ -990,6 +1000,8 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 	calias = 		&& The selected alias
 	cappname = 		&& The name of the application
 	cattachments = 		&& Attachments for the email or support ticket
+	cconsoleclass = SFConsoleForm		&& The class to use for a debugging console at runtime
+	cconsolelibrary = SFConsole.vcx		&& The library containing the class specified in cConsoleClass
 	ccontact = 		&& The user's display name
 	ccurrerror = 		&& The former ON ERROR handler.
 	cdefaultaction = 		&& The default action to take
@@ -1041,6 +1053,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 	lticketcreated = .F.		&& .T. if a ticket was created
 	lusercansavedialog = .T.		&& .T. if the user can save the error log
 	Name = "sferrormgr"
+	ndatasession = 0		&& The datasession the error occurred in
 	nlasterror = 0		&& The index to the last error that occurred in aErrorInfo
 	nmaxerrors = 10		&& The maximum number of entries in aErrorInfo; 0 = no limit
 	nreturncode = -1		&& The return code for ExitProcess
@@ -1136,8 +1149,11 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		<memberdata name="calias" display="cAlias"/>
 		<memberdata name="lhandlingerror" display="lHandlingError"/>
 		<memberdata name="cencryptionlibrary" display="cEncryptionLibrary"/>
+		<memberdata name="ndatasession" display="nDataSession"/>
 		<memberdata name="clanguage" display="cLanguage"/>
 		<memberdata name="cresourcetable" display="cResourceTable"/>
+		<memberdata name="cconsoleclass" display="cConsoleClass"/>
+		<memberdata name="cconsolelibrary" display="cConsoleLibrary"/>
 		</VFPData>		&& XML Metadata for customizable properties
 	
 	PROCEDURE about		&& Provides documentation for the class
@@ -1146,7 +1162,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Based On:						Custom
 		* Purpose:						Error handler class
 		* Author:						Doug Hennig
-		* Last revision:				04/09/2022
+		* Last revision:				10/21/2022
 		* Include file:					SFErrorMgr.h
 		*
 		* Changes in "Based On" class properties:
@@ -1166,6 +1182,10 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*	cAlias:						the selected alias
 		*	cAppName:					the name of the application
 		*	cAttachments:				attachments for the email or support ticket
+		*	cConsoleClass:				the class to use for a debugging console at
+		*								runtime
+		*	cConsoleLibrary:			the library containing the class specified in
+		*								cConsoleClass
 		*	cContact:					the user's display name
 		*	cDefaultAction:				the default action to take
 		*	cEmail:						the user's email address
@@ -1228,6 +1248,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*	lShowDebug:					.T. if "debug" should be an option
 		*	lTicketCreated:				.T. if a ticket was created
 		*	lUserCanSaveDialog:			.T. if the user can save the error log
+		*	nDataSession:				the datasession the error occurred in
 		*	nLastError:					the index to the last error that occurred in
 		*								aErrorInfo
 		*	nMaxErrors:					the maximum number of entries in aErrorInfo;
@@ -1296,7 +1317,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Purpose:			Checks to see if we're in a TRY structure somewhere in the
 		*						call stack
 		* Author:			Doug Hennig
-		* Last Revision:	01/28/2022
+		* Last Revision:	05/27/2022
 		* Parameters:		none
 		* Returns:			.T. if we're in a TRY structure somewhere in the call stack
 		* Environment in:	wwDotNetBridge is loaded into oBridge or is available to be
@@ -1348,15 +1369,16 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Method:			CommandShell
 		* Purpose:			Command shell for runtime environments
 		* Author:			Doug Hennig
-		* Last Revision:	01/12/2005
+		* Last Revision:	10/21/2022
 		* Parameters:		none
-		* Environment in:	none
+		* Environment in:	This.cConsoleClass and This.cConsoleLibrary contain the
+		*					class and library to use for the debugging console
 		* Environment out:	none
 		* Routines used:	none
 		*===============================================================================
 		
 		local loForm
-		loForm = newobject('SFConsoleForm', 'SFConsole')
+		loForm = newobject(This.cConsoleClass, This.cConsoleLibrary)
 		loForm.Show(1)
 		return
 		
@@ -1368,7 +1390,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Protected
 		* Purpose:			Create a string describing the error
 		* Author:			Doug Hennig
-		* Last revision:	03/12/2021
+		* Last revision:	07/01/2022
 		* Parameters:		none
 		* Returns:			a string describing the error
 		* Environment in:	This.aErrorInfo is filled with error information
@@ -1428,7 +1450,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		
 		* Figure out the object, method, and module.
 		
-			lnPos = rat(' ', lcErrMethod)
+			lnPos = at(' ', lcErrMethod, 2)
 			if lnPos = 0
 				lcModule = ''
 				lcObject = lcErrMethod
@@ -1513,7 +1535,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Creates a ticket or sends an email
 		* Author:			Doug Hennig
-		* Last Revision:	03/30/2021
+		* Last Revision:	07/14/2022
 		* Parameters:		tcMessage - the message for the ticket or email
 		*					tcEmail   - the email address to use
 		*					tcContact - the name of the user
@@ -1534,7 +1556,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 			lcEmail         = evl(tcEmail,   .cSenderEmail)
 			lcContact       = evl(tcContact, .cSenderName)
 			lcAttachments   = .cErrorLogTextFile + ;
-				iif(.lScreenShot, ',' + .cImageFile, '') + ;
+				iif(.lScreenShot and not empty(.cImageFile), ',' + .cImageFile, '') + ;
 				iif(empty(.cAttachments), '', ',' + .cAttachments)
 			.lTicketCreated = .F.
 			llOK            = .CreateTicket(tcMessage, lcEmail, lcContact, lcAttachments)
@@ -1545,7 +1567,8 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 				loMail.cSubject     = .cSubject
 				loMail.cBody        = tcMessage
 				loMail.cAttachments = lcAttachments
-				if not .lMAPI
+				if not .lMAPI and empty(loMail.cServer)
+					&& SMTP settings may have been set in CreateMailObject in a subclass
 					loMail.lUseMAPI         = .F.
 					loMail.cServer          = .cMailServer
 					loMail.cSenderEmail     = evl(.cSenderEmail, lcEmail)
@@ -1563,7 +1586,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 					if not empty(loMail.cPassword)
 						loMail.cPassword = .Decrypt(.cPassword, .cUserName)
 					endif not empty(loMail.cPassword)
-				endif not .lMAPI
+				endif not .lMAPI ...
 				llOK = loMail.SendMail()
 				if not llOK
 					.cMailErrorMessage = loMail.cErrorMessage
@@ -1726,11 +1749,12 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Handle errors
 		* Author:			Doug Hennig
-		* Last revision:	01/25/2022
-		* Parameters:		tnError  - the error number
-		*					tcMethod - the method or function the error occurred in
-		*					tnLine   - the line number within tcMethod
-		*					tcAlias  - the selected alias
+		* Last revision:	04/26/2022
+		* Parameters:		tnError       - the error number
+		*					tcMethod      - the method or function the error occurred in
+		*					tnLine        - the line number within tcMethod
+		*					tcAlias       - the selected alias
+		*					tnDataSession - the selected datasession ID
 		* Returns:			the choice made by the user or This.cDefaultAction if
 		*						This.lSuppressErrors is .T.
 		* Environment in:	This.lDisplayErrors is .T. if an message should be
@@ -1739,6 +1763,9 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*						logged
 		*					This.lAutoCreateTicket is .T. if a support ticket should
 		*						be created
+		*					This.lScreenShot is .T. if a screen shot should be taken
+		*						(This.lDisplayErrors or This.lAutoCreateTicket must
+		*						also be .T.)
 		*					This.lSuppressErrors is .T. if no message should be
 		*						displayed and no error logged
 		*					The "throttle" properties are set if error throttling
@@ -1769,22 +1796,22 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		lparameters tnError, ;
 			tcMethod, ;
 			tnLine, ;
-			tcAlias
+			tcAlias, ;
+			tnDataSession
 		local lcCurrTalk, ;
 			laError[1], ;
 			lcMessage, ;
-			llInsideTry, ;
 			llOriginalInsideTry, ;
+			llInsideTry, ;
 			lcChoice, ;
 			llReturn, ;
 			lcReadEventsProgram, ;
 			lcMasterProgram, ;
-			llLog, ;
-			llOverwrite, ;
+			llLogToTable, ;
+			llScreenShot, ;
 			llReturnTo, ;
 			llReturnToMaster, ;
-			loException as Exception, ;
-			llIsTryActive
+			loException as Exception
 		
 		* Ensure TALK and NULL are off.
 		
@@ -1804,8 +1831,9 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Grab the error information.
 		
 		aerror(laError)
-		lcMessage   = message(1)
-		This.cAlias = tcAlias
+		lcMessage         = message(1)
+		This.cAlias       = evl(tcAlias, '')
+		This.nDataSession = evl(tnDataSession, 1)
 		
 		* If we have a logging object, log the error.
 		
@@ -1916,9 +1944,11 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		
 		* Take a screen shot if we're supposed to.
 		
-							if .lScreenShot
+							llScreenShot = .lScreenShot and ;
+								(.lAutoCreateTicket or .lDisplayErrors)
+							if llScreenShot
 								.ScreenShot()
-							endif .lScreenShot
+							endif llScreenShot
 		
 		* If we're supposed to create a support ticket, do so.
 		
@@ -1934,12 +1964,12 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		
 		* Delete the screen shot if we created it.
 		
-							if .lScreenShot
+							if llScreenShot
 								try
 									erase (.cImageFile)
 								catch
 								endtry
-							endif .lScreenShot
+							endif llScreenShot
 		
 		* Delete the log file we created.
 		
@@ -2004,7 +2034,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* when running in the IDE).
 		
 			catch to loException
-				set step on
+				set step on 
 			endtry
 		endwith
 		
@@ -2282,8 +2312,14 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Now handle the status in the active datasession.
 		
 		lnCurrSession = set('DATASESSION')
+		if lnCurrSession <> This.nDataSession
+			try
+				set datasession to This.nDataSession
+			catch
+			endtry
+		endif lnCurrSession <> This.nDataSession
 		list status noconsole to file (lcFile)
-		lcVars = lcVars + 'Active Datasession: ' + transform(lnCurrSession) + ;
+		lcVars = lcVars + 'Active Datasession: ' + transform(This.nDataSession) + ;
 			ccCRLF + filetostr(lcFile) + ccCRLF
 		erase (lcFile)
 		
@@ -2292,7 +2328,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		lnSessions = asessions(laSessions)
 		for lnI = 1 to lnSessions
 			lnSession = laSessions[lnI]
-			if lnSession <> lnCurrSession
+			if lnSession <> This.nDataSession
 				set datasession to lnSession
 				list status noconsole to file (lcFile)
 				lcStatus = filetostr(lcFile)
@@ -2303,7 +2339,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 				lcVars   = lcVars + 'Datasession: ' + transform(lnSession) + ccCRLF + ;
 					lcStatus + ccCRLF
 				erase (lcFile)
-			endif lnSession <> lnCurrSession
+			endif lnSession <> This.nDataSession
 		next lnI
 		set datasession to lnCurrSession
 		
@@ -2384,7 +2420,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Initialize this class
 		* Author:			Doug Hennig
-		* Last revision:	12/23/2021
+		* Last revision:	04/26/2022
 		* Parameters:		tcTitle       - the default title to use for the error
 		*						dialog
 		*					tlSetOnError  - .T. to set ON ERROR
@@ -2436,7 +2472,8 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		
 			if .lSetOnError
 				.cCurrError = on('ERROR')
-				lcError = lcErrorObj + '.ErrorHandler(error(), sys(16), lineno(), alias())'
+				lcError = lcErrorObj + ".ErrorHandler(error(), sys(16), lineno(), " + ;
+					"alias(), set('DATASESSION'))"
 				on error &lcError
 			endif .lSetOnError
 			.lErrorOccurred  = .F.
@@ -2841,7 +2878,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Takes a screen shot
 		* Author:			Doug Hennig
-		* Last Revision:	04/09/2022
+		* Last Revision:	04/05/2022
 		* Parameters:		none
 		* Returns:			.T.
 		* Environment in:	System.app or exe must be available
@@ -2888,13 +2925,13 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Purpose:			Sets lErrorOccurred and aErrorInfo to information about
 		*						the most recent error
 		* Author:			Doug Hennig
-		* Last revision:	02/27/2022
+		* Last revision:	07/14/2022
 		* Parameters:		tcMethod - the method or function the error occurred in
 		*					tnLine   - the line number within tcMethod
 		*					tcSource - the code causing the error
-		*					tuError  - an array of error information or an Exception
-		*						object (optional: only needed if we're logging a real
-		*						error)
+		*					tuError  - an array of error information, an Exception
+		*						object, or a message to log (optional: only needed if
+		*						we're logging a real error)
 		* Returns:			.T.
 		* Environment in:	This.aErrorInfo is dimensioned appropriately
 		*					This.lErrorSet is .T. if this method has already been called
@@ -2946,6 +2983,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 				.lErrorOccurred  = .T.
 				.lErrorInfoSaved = .T.
 				lcType           = type('tuError', 1)
+				lcType           = iif(lcType = 'U', type('tuError'), lcType)
 				llException      = lcType = 'O'
 				do case
 					 case llException

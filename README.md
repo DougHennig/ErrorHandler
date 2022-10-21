@@ -12,6 +12,24 @@ See [How to contribute to Error Handler](.github/CONTRIBUTING.md) for details on
 
 ## Releases
 
+### 2022-10-21
+
+* The new cConsoleClass and cConsoleLibrary properties allow you to specify what class to use for the VFP Command window emulator when "debug" is chosen in the runtime.
+
+* The error log now contains information about the data session the error occurred in.
+
+* It supports setting email settings in a subclass.
+
+* It supports Modern Authentication for emailing error information to support staff.
+
+* A bug in displaying the method the error occurred in was fixed.
+
+* Fixed a typo in SetError.
+
+* It uses ShellExecute to open the saved error text file rather than running Notepad.exe.
+
+* The Project Manager no longer gives a build error if VFPExMAPI.fll isn't found.
+
 ### 2022-04-09
 
 * It now takes a screen shot of the correct monitor (the one the app is running on) if there's more than one and displays a message that a screen shot is taken in the error dialog.
@@ -31,14 +49,19 @@ See [How to contribute to Error Handler](.github/CONTRIBUTING.md) for details on
 ### 2022-01-28
 
 * Displays the error dialog when _SCREEN.Visible is .F. and there is no top-level form yet (such as at the start of an application).
+
 * Added a TRY in SFErrorMgr.Decrypt in case decryption fails.
+
 * Newer wwDotNetBridge files are now included.
+
 * Removed the TRY in CheckInTry (added 2022-01-25) or it acts like it's always inside a TRY; used ON ERROR instead.
+
 * Added CLEAR ALL to ImmediateExit.
 
 ### 2022-01-25
 
 * Use TRY in CheckInTry in case wwDotNetBridge fails
+
 * Handle CLEAR ALL being executed in subclass at the end of ErrorHandler
 
 ### 2021-12-23
@@ -48,8 +71,11 @@ See [How to contribute to Error Handler](.github/CONTRIBUTING.md) for details on
 ### 2021-12-13
 
 * Tomislav Sokol added Croatian messages
+
 * Fixed a bug that prevented Quit from working for non-English languages
+
 * Removed unused records in Resource.dbf
+
 * Takes a screen shot to a JPG rather than PNG and uses _SCREEN rather than _VFP.HWnd which works better on some systems
 
 ### 2021-12-08
