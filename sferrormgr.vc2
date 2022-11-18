@@ -1162,7 +1162,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Based On:						Custom
 		* Purpose:						Error handler class
 		* Author:						Doug Hennig
-		* Last revision:				10/21/2022
+		* Last revision:				11/07/2022
 		* Include file:					SFErrorMgr.h
 		*
 		* Changes in "Based On" class properties:
@@ -2332,8 +2332,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 				set datasession to lnSession
 				list status noconsole to file (lcFile)
 				lcStatus = filetostr(lcFile)
-				lnPos    = at('Currently Selected', lcStatus)
-				lcStatus = substr(lcStatus, lnPos)
 				lnPos    = at('Procedure file', lcStatus)
 				lcStatus = left(lcStatus, lnPos - 1)
 				lcVars   = lcVars + 'Datasession: ' + transform(lnSession) + ccCRLF + ;

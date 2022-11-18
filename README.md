@@ -12,6 +12,10 @@ See [How to contribute to Error Handler](.github/CONTRIBUTING.md) for details on
 
 ## Releases
 
+### 2022-11-18
+
+* Don't remove text from datasession status
+
 ### 2022-10-21
 
 * The new cConsoleClass and cConsoleLibrary properties allow you to specify what class to use for the VFP Command window emulator when "debug" is chosen in the runtime.
