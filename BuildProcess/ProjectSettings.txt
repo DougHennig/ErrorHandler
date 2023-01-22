@@ -1,6 +1,7 @@
-AppName    = ErrorHandler
-AppID      = ErrorHandler
-Version    = 1.0
-Component  = Yes
-ChangeLog  = ChangeLog.md
-Repository = https://github.com/DougHennig/ErrorHandler
+AppName       = ErrorHandler
+AppID         = ErrorHandler
+Version       = 1.0
+Component     = Yes
+ChangeLog     = ChangeLog.md
+Repository    = https://github.com/DougHennig/ErrorHandler
+Bin2PRGFolder = .
