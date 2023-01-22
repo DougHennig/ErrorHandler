@@ -1,0 +1,129 @@
+lparameters toUpdateObject
+
+* Set the properties of the passed updater object.
+
+with toUpdateObject
+	.VersionNumber    = '1.0 - 20221118'
+	.AvailableVersion = 'ErrorHandler-1.0-update-20221118'
+	.Notes            = GetNotes()
+	.RegisterWithThor = GetRegisterWithThor()
+endwith
+return toUpdateObject
+
+* Get the notes for the project.
+
+procedure GetNotes
+local lcNotes
+text to lcNotes noshow
+# ErrorHandler
+
+ErrorHandler provides a highly configurable and customizable error handler for any VFP application.
+
+## Releases
+
+### 2022-11-18
+
+* Don't remove text from datasession status
+
+### 2022-10-21
+
+* The new cConsoleClass and cConsoleLibrary properties allow you to specify what class to use for the VFP Command window emulator when "debug" is chosen in the runtime.
+
+* The error log now contains information about the data session the error occurred in.
+
+* It supports setting email settings in a subclass.
+
+* It supports Modern Authentication for emailing error information to support staff.
+
+* A bug in displaying the method the error occurred in was fixed.
+
+* Fixed a typo in SetError.
+
+* It uses ShellExecute to open the saved error text file rather than running Notepad.exe.
+
+* The Project Manager no longer gives a build error if VFPExMAPI.fll isn't found.
+
+### 2022-04-09
+
+* It now takes a screen shot of the correct monitor (the one the app is running on) if there's more than one and displays a message that a screen shot is taken in the error dialog.
+
+### 2022-03-09
+
+* At Tomislav Sokol's suggestion, added a timer to SFErrorMessageDialog to force it to be the active window if it isn't.
+
+### 2022-02-27
+
+* Fixed a typo in SetError.
+
+### 2022-02-25
+
+* SetError now accepts a string as the fourth parameter in case you want to log something that isn't an actual error (call SetError, then LogError).
+
+### 2022-01-28
+
+* Displays the error dialog when _SCREEN.Visible is .F. and there is no top-level form yet (such as at the start of an application).
+
+* Added a TRY in SFErrorMgr.Decrypt in case decryption fails.
+
+* Newer wwDotNetBridge files are now included.
+
+* Removed the TRY in CheckInTry (added 2022-01-25) or it acts like it's always inside a TRY; used ON ERROR instead.
+
+* Added CLEAR ALL to ImmediateExit.
+
+### 2022-01-25
+
+* Use TRY in CheckInTry in case wwDotNetBridge fails
+
+* Handle CLEAR ALL being executed in subclass at the end of ErrorHandler
+
+### 2021-12-23
+
+* Only SET LIBRARY TO encryption library if not already done
+
+### 2021-12-13
+
+* Tomislav Sokol added Croatian messages
+
+* Fixed a bug that prevented Quit from working for non-English languages
+
+* Removed unused records in Resource.dbf
+
+* Takes a screen shot to a JPG rather than PNG and uses _SCREEN rather than _VFP.HWnd which works better on some systems
+
+### 2021-12-08
+
+* Added localization support: see ErrorHandler.docx for information.
+
+### 2021-12-07
+
+* CheckInTry now handles wwDotNetBridge returning a non-logical value due to error, and removed copyright messages.
+
+### 2021-09-21
+
+* You can now specify the name of the encryption library to use by changing the new cEncryptionLibrary property (set to "VFPEncryption71.dll" by default) if necessary.
+
+### 2021-08-31
+
+* It now lists in the log the cursors open in each datasession.
+
+### 2021-08-23
+
+* Made it use VFPEncryption71.dll since that support the C++ runtime used by VFP.
+
+### 2021-07-20
+
+* Initial release
+
+endtext
+return lcNotes
+
+* Register the tool with Thor. Note: Thor replaces ##InstallFolder## with the
+* installation path for the tool when this code is executed.
+
+procedure GetRegisterWithThor
+local lcCommand
+text to lcCommand noshow
+
+endtext
+return lcCommand
