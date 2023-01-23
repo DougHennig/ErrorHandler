@@ -7,6 +7,7 @@ with toUpdateObject
 	.AvailableVersion = 'ErrorHandler-1.0-update-20221118'
 	.Notes            = GetNotes()
 	.RegisterWithThor = GetRegisterWithThor()
+	.ProjectCreationDate  = date(2023, 1, 22)
 endwith
 return toUpdateObject
 
