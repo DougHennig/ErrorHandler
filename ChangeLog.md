@@ -4,6 +4,14 @@ ErrorHandler provides a highly configurable and customizable error handler for a
 
 ## Releases
 
+### 2023-02-18
+
+* At Tomislav Sokol's suggestion, added TRY structure in CheckInTry to prevent an occasional issue with loading wwDotNetBridge.
+
+### 2023-01-22
+
+* Implemented [VFPX Deployment](https://github.com/VFPX/VFPXDeployment) so it works with Thor Check for Updates.
+
 ### 2022-11-18
 
 * Don't remove text from datasession status

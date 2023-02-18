@@ -1317,7 +1317,7 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Purpose:			Checks to see if we're in a TRY structure somewhere in the
 		*						call stack
 		* Author:			Doug Hennig
-		* Last Revision:	05/27/2022
+		* Last Revision:	02/18/2023
 		* Parameters:		none
 		* Returns:			.T. if we're in a TRY structure somewhere in the call stack
 		* Environment in:	wwDotNetBridge is loaded into oBridge or is available to be
@@ -1341,9 +1341,18 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Use InTry.dll to see if we're inside a TRY.
 		
 			if type('oBridge') <> 'O'
-				do wwDotNetBridge
-				oBridge = GetwwDotNetBridge()
-				oBridge.LoadAssembly('InTry.dll')
+				llLoaded = .F.
+				lnTries  = 0
+				do while not llLoaded and lnTries < 5
+					try
+						do wwDotNetBridge
+						oBridge = GetwwDotNetBridge()
+						oBridge.LoadAssembly('InTry.dll')
+						llLoaded = .T.
+					catch
+						lnTries = lnTries + 1
+					endtry
+				enddo while not llLoaded and lnTries < 5
 			endif type('oBridge') <> 'O'
 			llInsideTry = oBridge.InvokeStaticMethod('InTry.InTry', 'IsTryActive', ;
 				_vfp)

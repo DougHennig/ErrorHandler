@@ -3,11 +3,10 @@ lparameters toUpdateObject
 * Set the properties of the passed updater object.
 
 with toUpdateObject
-	.VersionNumber    = '1.0 - 20221118'
-	.AvailableVersion = 'ErrorHandler-1.0-update-20221118'
+	.VersionNumber    = '1.0 - 20230218'
+	.AvailableVersion = 'ErrorHandler-1.0-update-20230218'
 	.Notes            = GetNotes()
 	.RegisterWithThor = GetRegisterWithThor()
-	.ProjectCreationDate  = date(2023, 1, 22)
 endwith
 return toUpdateObject
 
@@ -21,6 +20,14 @@ text to lcNotes noshow
 ErrorHandler provides a highly configurable and customizable error handler for any VFP application.
 
 ## Releases
+
+### 2023-02-18
+
+* At Tomislav Sokol's suggestion, added TRY structure in CheckInTry to prevent an occasional issue with loading wwDotNetBridge.
+
+### 2023-01-22
+
+* Implemented [VFPX Deployment](https://github.com/VFPX/VFPXDeployment) so it works with Thor Check for Updates.
 
 ### 2022-11-18
 
