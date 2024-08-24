@@ -4,6 +4,30 @@ ErrorHandler provides a highly configurable and customizable error handler for a
 
 ## Releases
 
+### 2024-08-24
+
+* The error report no longer includes methods of the error handling chain in the call stack.
+
+* The new cSkipNames property contains the names of variables, objects, and properties to exclude from the error report. You can add the names of things like global variables you don't care about logging or variables or properties than contain sensitive information (such as passwords) that shouldn't be logged.
+
+* The cReturnToOnCancel property is now blank by default, which prevents the "Continue" button from appearing in the error message dialog. Set this property to the name of the routine contains the READ EVENTS statement for the application.
+
+* It now supports top level forms when taking a screen shot.
+
+* Removed references to oUtility and made GetMemVars get environment variables.
+
+* Changed resource UI_CMD_HELP_LOC to CMD_CAP_HELP for consistency.
+
+* SFErrorMgr.CreateTicketOrEmail now always sets the mail object cSenderEmail, cReplyTo, and cSenderName properties.
+
+* Added FormatLocalizedString method to SFLocalize.
+
+* Opening the encryption library was moved from Init to Decrypt. This allows you to override the Decrypt method in a subclass and not require VFPEncryption if you use a different mechanism such as [FoxCryptoNG](https://github.com/cwollenhaupt/foxCryptoNG).
+
+* If the cEmailLogFolder property is filled in, EmailLog.txt in that folder is written to when an email is sent to support staff.
+
+* "No table is open in the current work area" and "Cannot call SetFocus from within a When, Valid..." errors are now ignored, and it handles ignored errors properly.
+
 ### 2023-02-18
 
 * At Tomislav Sokol's suggestion, added TRY structure in CheckInTry to prevent an occasional issue with loading wwDotNetBridge.
