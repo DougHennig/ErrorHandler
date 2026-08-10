@@ -4,6 +4,32 @@ ErrorHandler provides a highly configurable and customizable error handler for a
 
 ## Releases
 
+### 2026-08-10
+
+* The SFMail components were upgraded to version 2026.04.09. As a result, the DLLs to deploy have changed: BouncyCastle.Crypto.dll, MailKit.dll, and MimeKit.dll are no longer needed but the following DLLs must be deployed if you're using SMTP for emailing errors:
+
+    * MailKitLite.dll
+    * MimeKitLite.dll
+    * System.Buffers.dll
+    * System.Formats.Asn1.dll
+    * System.Memory.dll
+    * System.Numerics.Vectors.dll
+    * System.Runtime.CompilerServices.Unsafe.dll
+    * System.Threading.Tasks.Extensions.dll
+    * System.ValueTuple.dll
+
+* Added Format.prg.
+
+* Removed unused records from Resource.dbf and added one that was missing.
+
+* SFErrorMessageDialog now displays the localized caption properly.
+
+* The Help button in SFErrorMessageDialog no longer appears unless the form's HelpContextID property is set to something other than 0.
+
+* SFErrorMgr.ImmediateExit now releases procedures and libraries after CANCEL in case the Destroy method of an objects needs them.
+
+* It now skips additional names in the Objects section of error log: __DotNetBridge, oLogger, and several properties of forms that appear with an ellipsis, such as "CONTIN...SCROLL".
+
 ### 2024-08-24
 
 * The error report no longer includes methods of the error handling chain in the call stack.

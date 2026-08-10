@@ -36,33 +36,34 @@ endwith
 * Class:			SFMail
 * Purpose:			Wrapper to send email via MAPI or SMTP
 * Author:			Doug Hennig
-* Last revision:	05/18/2022
+* Last revision:	02/06/2026
 *==============================================================================
 
 define class SFMail as Custom
-	cAttachments       = ''		&& A comma-separated list of attachments for the email
-	cBCCRecipients     = ''		&& A comma- or semicolon-separated list of BCC recipients for the email
-	cBody              = ''		&& The email body
-	cCCRecipients      = ''		&& A comma- or semicolon-separated list of CC recipients for the email
-	cErrorMessage      = ''		&& The text of any error
-	cLogFile           = ''		&& The name of a log file (SMTP only)
-	cPassword          = ''		&& The password for the mail server (SMTP only)
-	cRecipients        = ''		&& A comma- or semicolon-separated list of recipients for the email
-	cReplyTo           = ''		&& The Reply To address for the email (SMTP only)
-	cSenderEmail       = ''		&& The email address of the sender (SMTP only)
-	cSenderName        = ''		&& The name of the sender (SMTP only)
-	cServer            = ''		&& The mail server address (SMTP only)
-	cSubject           = ''		&& The email subject
-	cUser              = ''		&& The user name for the mail server (SMTP only)
-	lUseMAPI           = .F.	&& .T. to use MAPI or .F. to use SMTP
-	lUseHTML           = .F.	&& .T. to use HTML or .F. to use plain text
-	nSecurityOptions   = 1		&& The SecureSocketOptions value to use (SMTP only)
-	nSMTPPort          = 25		&& The SMTP port to use (SMTP only)
-	nTimeout           = 30		&& The email timeout in seconds
-	cOAuthURL          = ''		&& The URL to use to get an OAuth token
-	cOAuthClientID     = ''		&& The OAuth client ID
-	cOAuthScope        = ''		&& The OAuth scope
-	cOAuthClientSecret = ''		&& The OAuth client secret
+	cAttachments       = ''				&& A comma-separated list of attachments for the email
+	cBCCRecipients     = ''				&& A comma- or semicolon-separated list of BCC recipients for the email
+	cBody              = ''				&& The email body
+	cCCRecipients      = ''				&& A comma- or semicolon-separated list of CC recipients for the email
+	cErrorMessage      = ''				&& The text of any error
+	cLogFile           = ''				&& The name of a log file (SMTP only)
+	cPassword          = ''				&& The password for the mail server (SMTP only)
+	cRecipients        = ''				&& A comma- or semicolon-separated list of recipients for the email
+	cReplyTo           = ''				&& The Reply To address for the email (SMTP only)
+	cSenderEmail       = ''				&& The email address of the sender (SMTP only)
+	cSenderName        = ''				&& The name of the sender (SMTP only)
+	cServer            = ''				&& The mail server address (SMTP only)
+	cSubject           = ''				&& The email subject
+	cUser              = ''				&& The user name for the mail server (SMTP only)
+	lUseMAPI           = .F.			&& .T. to use MAPI or .F. to use SMTP
+	lUseHTML           = .F.			&& .T. to use HTML or .F. to use plain text
+	nSecurityOptions   = 1				&& The SecureSocketOptions value to use (SMTP only)
+	nSMTPPort          = 25				&& The SMTP port to use (SMTP only)
+	nTimeout           = 30				&& The email timeout in seconds
+	cOAuthURL          = ''				&& The URL to use to get an OAuth token
+	cOAuthClientID     = ''				&& The OAuth client ID
+	cOAuthScope        = ''				&& The OAuth scope
+	cOAuthClientSecret = ''				&& The OAuth client secret
+	cVersion           = '2026.02.06'	&& The version number
 
 *==============================================================================
 * Method:			SendMail
@@ -186,13 +187,11 @@ define class SFMail as Custom
 * Returns:			.T. if the message was sent
 * Environment in:	the properties are set for emailing
 *					wwDotNetBridge has been loaded or is available to be loaded
-*					SMTPLibrary2.dll, BouncyCastle.Crypto.dll, MimeKit.dll, and
-*						MailKit.dll have been loaded or are available to be
-*						loaded
+*					SMTPLibrary2.dll and its supporting DLLs have been loaded
+*						or are available to be loaded
 * Environment out:	the email may have been sent
 *					wwDotNetBridge has been loaded if it wasn't before
-*					SMTPLibrary2.dll, BouncyCastle.Crypto.dll, MimeKit.dll, and
-*						MailKit.dll have been loaded
+*					SMTPLibrary2.dll and its supporting DLLs have been loaded
 *==============================================================================
 
 	protected procedure SendMailSMTP
@@ -354,13 +353,13 @@ define class SFMail as Custom
 * Method:			GetToken
 * Purpose:			Gets an OAuth2 token
 * Author:			Doug Hennig, adapted from code written by Rick Strahl
-* Last revision:	03/12/2022
+* Last revision:	02/06/2026
 * Parameters:		none
 * Returns:			an OAuth2 token string if it succeeded or empty if not
 * Environment in:	This.cOAuthURL, This.cOAuthClientID, This.cOAuthScope,
 *						This.cOAuthClientSecret, This.cUser, and This.cPassword
 *						contain the appropriate values
-*					msxml2.xmlhttp is available to be used
+*					WinHttp.WinHttpRequest.5.1 is available to be used
 * Environment out:	This.cErrorMessage contains the error message if something
 *						went wrong
 *==============================================================================
@@ -377,21 +376,14 @@ define class SFMail as Custom
 			'&password=' + This.Encode(This.cPassword) + ;
 			'&scope=' + This.Encode(This.cOAuthScope) + ;
 			'&client_secret=' + This.Encode(This.cOAuthClientSecret)
-		loHTTP = createobject('msxml2.xmlhttp')
+		loHTTP = createobject('WinHttp.WinHttpRequest.5.1')
 *** Note: could use this if you need to control the timeout: see
-*** https://learn.microsoft.com/en-US/previous-versions/windows/desktop/ms762278(v=vs.85)
-*		loHTTP = createobject('msxml2.serverxmlhttp')
+*** https://learn.microsoft.com/en-us/windows/win32/winhttp/iwinhttprequest-settimeouts
 *		loHTTP.SetTimeouts(60000, 60000, 30000, 30000)
-		loHTTP.open('POST', This.cOAuthURL)
+		loHTTP.Open('POST', This.cOAuthURL)
 		loHTTP.SetRequestHeader('Content-Type', ;
 			'application/x-www-form-urlencoded')
 		loHTTP.Send(lcPost)
-		lnStart = seconds()
-		do while loHTTP.ReadyState <> 4
-			if seconds() = lnStart + This.nTimeout
-				exit
-			endif seconds() = lnStart + This.nTimeout
-		enddo while loHTTP.ReadyState <> 4
 		lcReturn = loHTTP.ResponseText
 		lcToken  = strextract(lcReturn, '"access_token":"', '"')
 		if empty(lcToken)
