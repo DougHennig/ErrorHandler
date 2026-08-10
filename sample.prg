@@ -44,13 +44,13 @@ with oError
 * Get the email settings for the demo. To run this on your machine, put the
 * correct settings into these properties.
 
-	set library to VFPEncryption71
+	loCrypto      = newobject('FoxCryptoNG', 'FoxCryptoNG.prg')
 	.cRecipient   = 'Put email address of recipient here'
 	.cSenderEmail = 'Put email address of sender here'
 	.cMailServer  = 'Put address of mail server here'
 	.nSMTPPort    = 'Put port number for mail server here'
 	.cUserName    = 'Put user name for mail server here'
-	.cPassword    = Encrypt('Put password for mail server here', .cUserName)
+	.cPassword    = loCrypto.Encrypt_AES('Put password for mail server here', left(replicate(.cUserName, 5), 32))
 
 * Set the localizer settings (these are the defaults but are set here to show
 * how to change them).

@@ -928,7 +928,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		*p: cdefaultaction		&& The default action to take
 		*p: cemail		&& The user's email address
 		*p: cemaillogfolder		&& The folder to use for email logging
-		*p: cencryptionlibrary		&& The name of the encryption library to use
 		*p: cerrorlogfile		&& The name of the table to log errors to
 		*p: cerrorlogtextfile		&& The name of the text file to log errors to
 		*p: cimagefile		&& The name and path of the image file for the screen shot
@@ -1000,7 +999,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		cdefaultaction = 
 		cemail = 
 		cemaillogfolder = 
-		cencryptionlibrary = VFPEncryption71.fll
 		cerrorlogfile = errorlog.dbf
 		cerrorlogtextfile = 
 		cimagefile = 
@@ -1142,7 +1140,6 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 			<memberdata name="nreturncode" display="nReturnCode"/>
 			<memberdata name="calias" display="cAlias"/>
 			<memberdata name="lhandlingerror" display="lHandlingError"/>
-			<memberdata name="cencryptionlibrary" display="cEncryptionLibrary"/>
 			<memberdata name="ndatasession" display="nDataSession"/>
 			<memberdata name="clanguage" display="cLanguage"/>
 			<memberdata name="cresourcetable" display="cResourceTable"/>
@@ -1611,40 +1608,20 @@ DEFINE CLASS sferrormgr AS custom 		&& An error manager class
 		* Status:			Public
 		* Purpose:			Decrypts a string
 		* Author:			Doug Hennig
-		* Last Revision:	06/05/2024
+		* Last Revision:	08/10/2026
 		* Parameters:		tcString - the string to decrypt
 		*					tcKey    - a key to decrypt against
 		* Returns:			the decrypted string
-		* Environment in:	This.cEncryptionLibrary contains the name of an FLL to open
-		*					the encryption library is loaded or can be
-		* Environment out:	the encryption library is loaded if it wasn't before
+		* Environment in:	FoxCryptoNG.prg is available
+		* Environment out:	none
 		*==============================================================================
 		
 		lparameters tcString, ;
 			tcKey
-		local lcLibrary, ;
+		local loCrypto, ;
 			lcReturn
-		
-		* Open the encryption library if necessary.
-		
-		lcLibrary = lower(set('LIBRARY'))
-		do case
-			case file(This.cEncryptionLibrary) and ;
-				not lower(justfname(This.cEncryptionLibrary)) $ lcLibrary
-				set library to (This.cEncryptionLibrary) additive
-			case file('VFPEncryption.fll') and not 'vfpencryption.fll' $ lcLibrary
-				set library to ('VFPEncryption.fll') additive
-			case file('Encryption.fll') and not 'encryption.fll' $ lcLibrary
-				set library to ('Encryption.fll') additive
-		endcase
-		
-		* Decrypt the string.
-		
-		try
-			lcReturn = strtran(Decrypt(tcString, tcKey), ccNULL)
-		catch
-			lcReturn = tcString
-		endtry
+		loCrypto = newobject('FoxCryptoNG', 'FoxCryptoNG.prg')
+		lcReturn = loCrypto.Decrypt_AES(tcString, left(replicate(tcKey, 5), 32))
 		return lcReturn
 		
 	ENDPROC

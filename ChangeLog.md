@@ -18,6 +18,8 @@ ErrorHandler provides a highly configurable and customizable error handler for a
     * System.Threading.Tasks.Extensions.dll
     * System.ValueTuple.dll
 
+* Christof Wollenhaupt's FoxCryptoNG is used instead of VFPEncryption.fll for email password encryption and decryption.
+
 * Added Format.prg.
 
 * Removed unused records from Resource.dbf and added one that was missing.

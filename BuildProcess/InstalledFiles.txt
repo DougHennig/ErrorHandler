@@ -1,9 +1,9 @@
-BouncyCastle.Crypto.dll
 clrhost.dll
 errorheader.gif
+foxcryptong.prg
 InTry.dll
-MailKit.dll
-MimeKit.dll
+MailKitLite.dll
+MimeKitLite.dll
 resource.cdx
 resource.dbf
 resource.fpt
@@ -23,7 +23,13 @@ sflocalize.vcx
 sfmail.prg
 SMTPLibrary2.dll
 system.app
-vfpencryption71.fll
+System.Buffers.dll
+System.Formats.Asn1.dll
+System.Memory.dll
+System.Numerics.Vectors.dll
+System.Runtime.CompilerServices.Unsafe.dll
+System.Threading.Tasks.Extensions.dll
+System.ValueTuple.dll
 vfpexmapi.fll
 wwDotNetBridge.dll
 wwDotNetBridge.prg
